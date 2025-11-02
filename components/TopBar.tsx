@@ -72,30 +72,30 @@ export default function TopBar({ presentationName, onNameChange }: TopBarProps) 
 
   return (
     <div className="w-full bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
         <input
           type="text"
           value={presentationName}
           onChange={(e) => onNameChange(e.target.value)}
-          className="text-xl font-bold border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1 flex-1 max-w-md"
+          className="text-base sm:text-xl font-bold border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1 flex-1 max-w-md"
           placeholder="Presentation Name"
         />
         
         <div className="flex gap-2">
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
           >
             <Download className="w-4 h-4" />
-            Export
+            <span className="hidden sm:inline">Export</span>
           </button>
           
           <button
             onClick={handleImportClick}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
           >
             <Upload className="w-4 h-4" />
-            Import
+            <span className="hidden sm:inline">Import</span>
           </button>
           
           <input

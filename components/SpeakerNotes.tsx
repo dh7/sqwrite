@@ -24,9 +24,9 @@ export default function SpeakerNotes({ notes, onUpdate }: SpeakerNotesProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-lg shadow p-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Speaker Notes</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Speaker Notes</h3>
         {!isEditing ? (
           <button
             onClick={() => setIsEditing(true)}
@@ -56,11 +56,11 @@ export default function SpeakerNotes({ notes, onUpdate }: SpeakerNotesProps) {
         <textarea
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
-          className="w-full h-48 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
+          className="w-full h-40 sm:h-48 p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs sm:text-sm"
           placeholder="Write speaker notes in markdown..."
         />
       ) : (
-        <div className="prose prose-sm max-w-none text-gray-700">
+        <div className="prose prose-sm max-w-none text-gray-700 text-sm sm:text-base">
           <ReactMarkdown>{notes}</ReactMarkdown>
         </div>
       )}

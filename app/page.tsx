@@ -121,15 +121,15 @@ export default function Home() {
       />
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Side - Chatbot */}
-        <div className="w-1/3 p-4 border-r border-gray-200">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden gap-4 p-4">
+        {/* Left Side - Chatbot (hidden on mobile, shown on large screens) */}
+        <div className="hidden lg:flex lg:w-1/3">
           <Chatbot />
         </div>
 
         {/* Right Side - Slide View */}
-        <div className="flex-1 p-8 overflow-y-auto">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto w-full space-y-4">
             {/* Slide Controls */}
           <SlideControls
             currentIndex={presentation.currentSlideIndex}
@@ -160,6 +160,13 @@ export default function Home() {
               onUpdate={handleUpdateSpeakerNotes}
             />
           )}
+
+          {/* Mobile Chatbot - shown only on small screens, below speaker notes */}
+          <div className="lg:hidden">
+            <div className="h-96">
+              <Chatbot />
+            </div>
+          </div>
           </div>
         </div>
       </div>
