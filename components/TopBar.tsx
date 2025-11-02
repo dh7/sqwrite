@@ -1,8 +1,9 @@
 "use client";
 
-import { Download, Upload, ArrowUpDown } from 'lucide-react';
+import { Download, Upload, ArrowUpDown, Play } from 'lucide-react';
 import { presentationCache } from '@/lib/mindcache-store';
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface TopBarProps {
   presentationName: string;
@@ -12,6 +13,7 @@ interface TopBarProps {
 
 export default function TopBar({ presentationName, onNameChange, onReorder }: TopBarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   // Save to cookies whenever MindCache changes
   useEffect(() => {
@@ -105,6 +107,14 @@ export default function TopBar({ presentationName, onNameChange, onReorder }: To
           >
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Import</span>
+          </button>
+          
+          <button
+            onClick={() => router.push('/play')}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+          >
+            <Play className="w-4 h-4" />
+            <span className="hidden sm:inline">Play</span>
           </button>
           
           <input

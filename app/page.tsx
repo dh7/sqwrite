@@ -147,9 +147,9 @@ export default function Home() {
       />
 
       {/* Main Content */}
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden gap-4 p-4">
-        {/* Left Side - Chatbot (hidden on mobile, shown on large screens) */}
-        <div className="hidden lg:flex lg:w-1/3">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden gap-4 p-4">
+        {/* Left Side - Chatbot (hidden on mobile, shown on medium screens) */}
+        <div className="hidden md:flex md:w-1/3">
           <Chatbot />
         </div>
 
@@ -189,7 +189,7 @@ export default function Home() {
           )}
 
           {/* Mobile Chatbot - shown only on small screens, below speaker notes */}
-          <div className="lg:hidden">
+          <div className="md:hidden">
             <div className="h-96">
               <Chatbot />
             </div>
