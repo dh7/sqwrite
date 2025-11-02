@@ -38,20 +38,23 @@ export const presentationHelpers = {
       }
     }
 
-    const currentIndex = presentationCache.get('Current_Slide_Index') as number || 0;
+    const currentSlide = presentationCache.get('Current_slide') as string || 'Slide_001';
+    const currentIndex = slides.findIndex(s => s.id === `slide-${currentSlide.match(/\d{3}/)?.[0]}`);
 
     return {
       id: 'prez-1',
       title,
       slides,
-      currentSlideIndex: Math.min(currentIndex, slides.length - 1),
+      currentSlideIndex: currentIndex >= 0 ? currentIndex : 0,
     };
   },
 
   // Save presentation by splitting into individual MindCache keys
   setPresentation: (presentation: Presentation): void => {
     presentationCache.set('Presentation_Name', presentation.title);
-    presentationCache.set('Current_Slide_Index', presentation.currentSlideIndex);
+    
+    const slideNum = String(presentation.currentSlideIndex + 1).padStart(3, '0');
+    presentationCache.set('Current_slide', `Slide_${slideNum}`);
 
     presentation.slides.forEach((slide, index) => {
       const slideNum = String(index + 1).padStart(3, '0');
@@ -115,15 +118,19 @@ export const presentationHelpers = {
       presentationCache.delete(`Slide_${oldNum}_notes`);
     }
 
-    // Update current index if needed
-    const currentIndex = presentationCache.get('Current_Slide_Index') as number || 0;
+    // Update current slide if needed
+    const currentSlide = presentationCache.get('Current_slide') as string || 'Slide_001';
+    const currentIndex = presentation.slides.findIndex(s => s.id === `slide-${currentSlide.match(/\d{3}/)?.[0]}`);
     if (currentIndex >= presentation.slides.length - 1) {
-      presentationCache.set('Current_Slide_Index', Math.max(0, presentation.slides.length - 2));
+      const newIndex = Math.max(0, presentation.slides.length - 2);
+      const newSlideNum = String(newIndex + 1).padStart(3, '0');
+      presentationCache.set('Current_slide', `Slide_${newSlideNum}`);
     }
   },
 
   setCurrentSlideIndex: (index: number): void => {
-    presentationCache.set('Current_Slide_Index', index);
+    const slideNum = String(index + 1).padStart(3, '0');
+    presentationCache.set('Current_slide', `Slide_${slideNum}`);
   },
 
   // Generate system prompt for AI with current presentation state
@@ -133,13 +140,28 @@ export const presentationHelpers = {
   },
 };
 
-// Initialize with empty presentation if none exists
+// Initialize from cookies or create new presentation
 if (typeof window !== 'undefined') {
+  // Try to load from cookies first
+  const cookies = document.cookie.split(';');
+  const sqwriteCookie = cookies.find(c => c.trim().startsWith('sqwrite_presentation='));
+  
+  if (sqwriteCookie) {
+    try {
+      const cookieData = decodeURIComponent(sqwriteCookie.split('=')[1]);
+      const parsedData = JSON.parse(cookieData);
+      presentationCache.update(parsedData);
+    } catch (error) {
+      console.error('Failed to load from cookies:', error);
+    }
+  }
+  
+  // If no cookie data or import failed, initialize with default
   const existing = presentationCache.get('Presentation_Name');
   if (!existing) {
     // Initialize with proper MindCache keys
     presentationCache.set('Presentation_Name', 'My Presentation');
-    presentationCache.set('Current_Slide_Index', 0);
+    presentationCache.set('Current_slide', 'Slide_001');
     
     presentationCache.set('Slide_001_content', {
       type: 'bullets',

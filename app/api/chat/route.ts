@@ -26,10 +26,10 @@ export async function POST(req: Request) {
 ${stmPrompt}
 
 ## How the presentation is structured:
-- Presentation_Name: The title of the presentation
-- Current_Slide_Index: The currently selected slide (0-based)
-- Slide_XXX_content: Content for each slide (JSON with type: 'quote' | 'bullets' | 'image')
-- Slide_XXX_notes: Speaker notes for each slide (markdown)
+    - Presentation_Name: The title of the presentation
+    - Current_slide: The currently selected slide (e.g., 'Slide_001')
+    - Slide_XXX_content: Content for each slide (JSON with type: 'quote' | 'bullets' | 'image')
+    - Slide_XXX_notes: Speaker notes for each slide (markdown)
 
 ## Your capabilities:
 You can help users:

@@ -97,7 +97,7 @@ MindCache is implemented **client-side only** for simplicity and reliability:
 The presentation data is stored in client-side MindCache using individual keys with proper STM structure:
 
 - `Presentation_Name` - The presentation title
-- `Current_Slide_Index` - Currently selected slide (0-based)
+- `Current_slide` - Currently selected slide (e.g., 'Slide_001')
 - `Slide_001_content` - Content for slide 1 (JSON object)
 - `Slide_001_notes` - Speaker notes for slide 1 (markdown)
 - `Slide_002_content` - Content for slide 2

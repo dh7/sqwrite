@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import TopBar from '@/components/TopBar';
 import SlideRenderer from '@/components/SlideRenderer';
 import SpeakerNotes from '@/components/SpeakerNotes';
 import SlideControls from '@/components/SlideControls';
@@ -110,29 +111,26 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Left Side - Chatbot */}
-      <div className="w-1/3 p-4 border-r border-gray-200">
-        <Chatbot />
-      </div>
+    <div className="flex flex-col h-screen overflow-hidden">
+      {/* Top Bar */}
+      <TopBar 
+        presentationName={presentation.title}
+        onNameChange={(name) => {
+          presentationCache.set('Presentation_Name', name);
+        }}
+      />
 
-      {/* Right Side - Slide View */}
-      <div className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Presentation Title */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <input
-              type="text"
-              value={presentation.title}
-              onChange={(e) => {
-                presentationCache.set('Presentation_Name', e.target.value);
-                // MindCache subscription will automatically update the UI
-              }}
-              className="text-2xl font-bold w-full border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
-            />
-          </div>
+      {/* Main Content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Side - Chatbot */}
+        <div className="w-1/3 p-4 border-r border-gray-200">
+          <Chatbot />
+        </div>
 
-          {/* Slide Controls */}
+        {/* Right Side - Slide View */}
+        <div className="flex-1 p-8 overflow-y-auto">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Slide Controls */}
           <SlideControls
             currentIndex={presentation.currentSlideIndex}
             totalSlides={presentation.slides.length}
@@ -162,6 +160,7 @@ export default function Home() {
               onUpdate={handleUpdateSpeakerNotes}
             />
           )}
+          </div>
         </div>
       </div>
 
