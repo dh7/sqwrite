@@ -8,6 +8,7 @@ import SlideControls from '@/components/SlideControls';
 import SlideEditor from '@/components/SlideEditor';
 import Chatbot from '@/components/Chatbot';
 import MindCacheDebugView from '@/components/MindCacheDebugView';
+import SlideReorderView from '@/components/SlideReorderView';
 import { presentationHelpers, presentationCache } from '@/lib/mindcache-store';
 import { Presentation, Slide, SlideContent } from '@/lib/types';
 import { Edit2 } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function Home() {
   const [presentation, setPresentation] = useState<Presentation | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
+  const [isReorderOpen, setIsReorderOpen] = useState(false);
 
   // Load presentation from MindCache and subscribe to changes
   useEffect(() => {
@@ -118,6 +120,7 @@ export default function Home() {
         onNameChange={(name) => {
           presentationCache.set('Presentation_Name', name);
         }}
+        onReorder={() => setIsReorderOpen(true)}
       />
 
       {/* Main Content */}
@@ -184,6 +187,12 @@ export default function Home() {
       <MindCacheDebugView 
         isOpen={isDebugOpen} 
         onClose={() => setIsDebugOpen(false)} 
+      />
+
+      {/* Slide Reorder View */}
+      <SlideReorderView 
+        isOpen={isReorderOpen} 
+        onClose={() => setIsReorderOpen(false)} 
       />
     </div>
   );

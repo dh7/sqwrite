@@ -1,15 +1,16 @@
 "use client";
 
-import { Download, Upload } from 'lucide-react';
+import { Download, Upload, ArrowUpDown } from 'lucide-react';
 import { presentationCache } from '@/lib/mindcache-store';
 import { useEffect, useRef } from 'react';
 
 interface TopBarProps {
   presentationName: string;
   onNameChange: (name: string) => void;
+  onReorder: () => void;
 }
 
-export default function TopBar({ presentationName, onNameChange }: TopBarProps) {
+export default function TopBar({ presentationName, onNameChange, onReorder }: TopBarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Save to cookies whenever MindCache changes
@@ -82,6 +83,14 @@ export default function TopBar({ presentationName, onNameChange }: TopBarProps) 
         />
         
         <div className="flex gap-2">
+          <button
+            onClick={onReorder}
+            className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+          >
+            <ArrowUpDown className="w-4 h-4" />
+            <span className="hidden sm:inline">Re-order</span>
+          </button>
+          
           <button
             onClick={handleExport}
             className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
