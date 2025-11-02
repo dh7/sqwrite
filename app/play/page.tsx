@@ -14,9 +14,47 @@ export default function PlayPage() {
   const [mobileSplitPosition, setMobileSplitPosition] = useState(66.67); // Percentage for mobile - 2/3
   const [isDragging, setIsDragging] = useState(false);
   const [isMobileDragging, setIsMobileDragging] = useState(false);
+  const [isLoadingFromUrl, setIsLoadingFromUrl] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadedFromUrl, setLoadedFromUrl] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const mobileContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const loadFromUrl = async () => {
+      // Check for URL parameter
+      const params = new URLSearchParams(window.location.search);
+      const prezUrl = params.get('url');
+      
+      if (prezUrl) {
+        setIsLoadingFromUrl(true);
+        setLoadedFromUrl(true);
+        setLoadError(null);
+        
+        try {
+          const response = await fetch(prezUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch presentation: ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          
+          // Load into MindCache
+          presentationCache.clear();
+          presentationCache.update(data);
+          
+          setIsLoadingFromUrl(false);
+        } catch (error) {
+          console.error('Error loading presentation from URL:', error);
+          setLoadError(error instanceof Error ? error.message : 'Failed to load presentation');
+          setIsLoadingFromUrl(false);
+        }
+      }
+    };
+
+    loadFromUrl();
+  }, []);
 
   useEffect(() => {
     const loadPresentation = () => {
@@ -58,7 +96,7 @@ export default function PlayPage() {
         presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex - 1);
       } else if (e.key === 'ArrowRight' && presentation.currentSlideIndex < presentation.slides.length - 1) {
         presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex + 1);
-      } else if (e.key === 'Escape') {
+      } else if (e.key === 'Escape' && !loadedFromUrl) {
         router.push('/edit');
       }
     };
@@ -67,7 +105,7 @@ export default function PlayPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [presentation, router]);
+  }, [presentation, router, loadedFromUrl]);
 
   // Drag handlers for desktop split (vertical)
   useEffect(() => {
@@ -136,12 +174,32 @@ export default function PlayPage() {
     };
   }, [isMobileDragging]);
 
-  if (!presentation) {
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center max-w-md px-4">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Failed to Load Presentation</h2>
+          <p className="text-gray-600 mb-4">{loadError}</p>
+          <button
+            onClick={() => router.push('/')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Go to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!presentation || isLoadingFromUrl) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading presentation...</p>
+          <p className="mt-4 text-gray-600">
+            {isLoadingFromUrl ? 'Loading presentation from URL...' : 'Loading presentation...'}
+          </p>
         </div>
       </div>
     );
@@ -156,13 +214,15 @@ export default function PlayPage() {
           className="flex flex-col overflow-hidden relative flex-shrink-0"
           style={{ height: `${mobileSplitPosition}%` }}
         >
-          <button
-            onClick={() => router.push('/edit')}
-            className="absolute top-2 left-2 p-1.5 text-gray-400 hover:text-gray-700 rounded-full transition-colors z-10"
-            aria-label="Exit play mode"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {!loadedFromUrl && (
+            <button
+              onClick={() => router.push('/edit')}
+              className="absolute top-2 left-2 p-1.5 text-gray-400 hover:text-gray-700 rounded-full transition-colors z-10"
+              aria-label="Exit play mode"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
 
           {/* Square slide - takes most space */}
           <div className="flex-1 flex items-center justify-center p-2 overflow-hidden">
@@ -219,13 +279,15 @@ export default function PlayPage() {
           className="flex flex-col items-center justify-center p-0 relative"
           style={{ width: `${splitPosition}%` }}
         >
-          <button
-            onClick={() => router.push('/edit')}
-            className="absolute top-2 left-2 p-1.5 text-gray-400 hover:text-gray-700 rounded-full transition-colors z-10"
-            aria-label="Exit play mode"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {!loadedFromUrl && (
+            <button
+              onClick={() => router.push('/edit')}
+              className="absolute top-2 left-2 p-1.5 text-gray-400 hover:text-gray-700 rounded-full transition-colors z-10"
+              aria-label="Exit play mode"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
 
           <div className="flex flex-col items-center gap-0 w-full max-w-[70vmin]">
             <div className="w-full">
