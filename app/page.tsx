@@ -45,6 +45,12 @@ export default function LandingPage() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button
+              onClick={() => router.push('/play?url=/about.sqwrite')}
+              className="px-8 py-4 bg-white text-gray-900 text-lg font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-md hover:shadow-lg active:scale-95 border border-gray-200 w-full sm:w-auto"
+            >
+              About
+            </button>
+            <button
               onClick={() => router.push('/edit')}
               className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl active:scale-95 w-full sm:w-auto"
             >
