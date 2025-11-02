@@ -30,8 +30,7 @@ export default function PlayChatbot() {
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 mt-8">
-            <p className="text-sm">Ask questions about your presentation</p>
-            <p className="text-xs mt-2 text-gray-400">Read-only mode</p>
+            <p className="text-sm">Ask question about this presentation</p>
           </div>
         )}
 
