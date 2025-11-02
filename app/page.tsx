@@ -1,224 +1,135 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import TopBar from '@/components/TopBar';
-import SlideRenderer from '@/components/SlideRenderer';
-import SpeakerNotes from '@/components/SpeakerNotes';
-import SlideControls from '@/components/SlideControls';
-import SlideEditor from '@/components/SlideEditor';
-import Chatbot from '@/components/Chatbot';
-import MindCacheDebugView from '@/components/MindCacheDebugView';
-import SlideReorderView from '@/components/SlideReorderView';
-import { presentationHelpers, presentationCache } from '@/lib/mindcache-store';
-import { Presentation, Slide, SlideContent } from '@/lib/types';
-import { Edit2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Square, Sparkles, Users, Zap } from 'lucide-react';
 
-export default function Home() {
-  const [presentation, setPresentation] = useState<Presentation | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDebugOpen, setIsDebugOpen] = useState(false);
-  const [isReorderOpen, setIsReorderOpen] = useState(false);
-
-  // Load presentation from MindCache and subscribe to changes
-  useEffect(() => {
-    const loadPresentation = () => {
-      const prez = presentationHelpers.getPresentation();
-      setPresentation(prez);
-    };
-
-    // Initial load
-    loadPresentation();
-
-    // Subscribe to all MindCache changes
-    const handleMindCacheUpdate = () => {
-      loadPresentation();
-    };
-    presentationCache.subscribeToAll(handleMindCacheUpdate);
-
-    // Keyboard shortcut for debug view: Cmd+Shift+D
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'D') {
-        e.preventDefault();
-        setIsDebugOpen(prev => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      presentationCache.unsubscribeFromAll(handleMindCacheUpdate);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  const currentSlide = presentation?.slides[presentation.currentSlideIndex];
-
-  const handlePrevious = () => {
-    if (presentation && presentation.currentSlideIndex > 0) {
-      presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex - 1);
-      // No need to manually trigger refresh - MindCache subscription will handle it
-    }
-  };
-
-  const handleNext = () => {
-    if (presentation && presentation.currentSlideIndex < presentation.slides.length - 1) {
-      presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex + 1);
-      // No need to manually trigger refresh - MindCache subscription will handle it
-    }
-  };
-
-  const handleAddSlide = () => {
-    const newSlide: Slide = {
-      id: `slide-${Date.now()}`,
-      content: {
-        type: 'bullets',
-        title: 'New Slide',
-        bullets: ['Point 1', 'Point 2', 'Point 3'],
-      },
-      speakerNotes: 'Add your speaker notes here.',
-    };
-    presentationHelpers.addSlide(newSlide);
-    // No need to manually trigger refresh - MindCache subscription will handle it
-  };
-
-  const handleDuplicateSlide = () => {
-    if (currentSlide && presentation) {
-      // Deep copy the content
-      let contentCopy: SlideContent;
-      if (currentSlide.content.type === 'bullets') {
-        contentCopy = {
-          ...currentSlide.content,
-          bullets: [...currentSlide.content.bullets],
-        };
-      } else {
-        contentCopy = { ...currentSlide.content };
-      }
-
-      const duplicatedSlide: Slide = {
-        id: `slide-${Date.now()}`,
-        content: contentCopy,
-        speakerNotes: currentSlide.speakerNotes,
-      };
-      presentationHelpers.insertSlideAfter(duplicatedSlide, presentation.currentSlideIndex);
-      // No need to manually trigger refresh - MindCache subscription will handle it
-    }
-  };
-
-  const handleDeleteSlide = () => {
-    if (currentSlide && confirm('Are you sure you want to delete this slide?')) {
-      presentationHelpers.deleteSlide(currentSlide.id);
-      // No need to manually trigger refresh - MindCache subscription will handle it
-    }
-  };
-
-  const handleUpdateSlideContent = (content: SlideContent) => {
-    if (currentSlide) {
-      presentationHelpers.updateSlide(currentSlide.id, { content });
-      // No need to manually trigger refresh - MindCache subscription will handle it
-    }
-  };
-
-  const handleUpdateSpeakerNotes = (notes: string) => {
-    if (currentSlide) {
-      presentationHelpers.updateSlide(currentSlide.id, { speakerNotes: notes });
-      // No need to manually trigger refresh - MindCache subscription will handle it
-    }
-  };
-
-  if (!presentation) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading presentation...</p>
-        </div>
-      </div>
-    );
-  }
+export default function LandingPage() {
+  const router = useRouter();
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      {/* Top Bar */}
-      <TopBar 
-        presentationName={presentation.title}
-        onNameChange={(name) => {
-          presentationCache.set('Presentation_Name', name);
-        }}
-        onReorder={() => setIsReorderOpen(true)}
-      />
-
-      {/* Main Content */}
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden gap-4 p-4">
-        {/* Left Side - Chatbot (hidden on mobile, shown on medium screens) */}
-        <div className="hidden md:flex md:w-1/3">
-          <Chatbot />
-        </div>
-
-        {/* Right Side - Slide View */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto w-full space-y-4">
-            {/* Slide Controls */}
-          <SlideControls
-            currentIndex={presentation.currentSlideIndex}
-            totalSlides={presentation.slides.length}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
-            onAddSlide={handleAddSlide}
-            onDuplicateSlide={handleDuplicateSlide}
-            onDeleteSlide={handleDeleteSlide}
-          />
-
-          {/* Slide Preview */}
-          {currentSlide && (
-            <div className="relative">
-              <SlideRenderer content={currentSlide.content} />
-              <button
-                onClick={() => setIsEditing(true)}
-                className="absolute top-4 right-4 p-3 bg-white rounded-full shadow-lg hover:bg-gray-50"
-              >
-                <Edit2 className="w-5 h-5 text-gray-700" />
-              </button>
-            </div>
-          )}
-
-          {/* Speaker Notes */}
-          {currentSlide && (
-            <SpeakerNotes
-              notes={currentSlide.speakerNotes}
-              onUpdate={handleUpdateSpeakerNotes}
-            />
-          )}
-
-          {/* Mobile Chatbot - shown only on small screens, below speaker notes */}
-          <div className="md:hidden">
-            <div className="h-96">
-              <Chatbot />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Navigation */}
+      <nav className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-2">
+              <Square className="w-8 h-8 text-blue-600" />
+              <span className="text-2xl font-bold text-gray-900">Square</span>
             </div>
           </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div className="text-center">
+          <div className="flex justify-center mb-8">
+            <div className="p-4 bg-blue-600 rounded-2xl shadow-lg">
+              <Square className="w-16 h-16 text-white" />
+            </div>
+          </div>
+          
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 mb-6">
+            Square
+          </h1>
+          
+          <p className="text-xl sm:text-2xl text-gray-600 mb-4 max-w-3xl mx-auto">
+            An opinionated presentation editor and player
+          </p>
+          
+          <p className="text-lg text-gray-500 mb-12 max-w-2xl mx-auto leading-relaxed">
+            AI understands what you build and helps you craft it. 
+            It can also help your audience understand and engage with the content.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button
+              onClick={() => router.push('/edit')}
+              className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl active:scale-95 w-full sm:w-auto"
+            >
+              Start Creating
+            </button>
+            <button
+              onClick={() => {
+                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="px-8 py-4 bg-white text-gray-900 text-lg font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-md hover:shadow-lg active:scale-95 border border-gray-200 w-full sm:w-auto"
+            >
+              Learn More
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Slide Editor Modal */}
-      {isEditing && currentSlide && (
-        <SlideEditor
-          content={currentSlide.content}
-          onUpdate={handleUpdateSlideContent}
-          onClose={() => setIsEditing(false)}
-        />
-      )}
+      {/* Features Section */}
+      <div id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Feature 1 */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
+              <Sparkles className="w-6 h-6 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">AI-Powered Creation</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Leverage AI to help you create compelling presentations. From brainstorming to polishing, 
+              AI assists you every step of the way.
+            </p>
+          </div>
 
-      {/* MindCache Debug View */}
-      <MindCacheDebugView 
-        isOpen={isDebugOpen} 
-        onClose={() => setIsDebugOpen(false)} 
-      />
+          {/* Feature 2 */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
+              <Zap className="w-6 h-6 text-purple-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Semantic Structure</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Built with a semantic foundation, your presentations are more than just slides—they're 
+              meaningful content that AI can understand and enhance.
+            </p>
+          </div>
 
-      {/* Slide Reorder View */}
-      <SlideReorderView 
-        isOpen={isReorderOpen} 
-        onClose={() => setIsReorderOpen(false)} 
-      />
+          {/* Feature 3 */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-6">
+              <Users className="w-6 h-6 text-green-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Audience Engagement</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Your audience can interact with an AI assistant that understands your presentation, 
+              helping them grasp concepts and ask questions.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Final CTA */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+        <h2 className="text-4xl font-bold text-gray-900 mb-6">
+          Ready to create your first presentation?
+        </h2>
+        <p className="text-lg text-gray-600 mb-8">
+          Start building beautiful, AI-enhanced square presentations today.
+        </p>
+        <button
+          onClick={() => router.push('/edit')}
+          className="px-10 py-5 bg-blue-600 text-white text-xl font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl active:scale-95"
+        >
+          Get Started
+        </button>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center gap-2 text-gray-600">
+            <Square className="w-5 h-5 text-blue-600" />
+            <span className="font-semibold">Square</span>
+            <span className="text-gray-400">•</span>
+            <span className="text-sm">Opinionated presentation editor</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
-

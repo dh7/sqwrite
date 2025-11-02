@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SqWrite - Square Presentation Creator",
-  description: "Create beautiful square presentations with AI assistance",
+  title: "Square - Opinionated Presentation Editor",
+  description: "An opinionated presentation editor and player. Use AI to create your deck, it's semantic—AI understands what you build and helps you craft it.",
 };
 
 export const viewport: Viewport = {

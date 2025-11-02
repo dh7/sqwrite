@@ -59,7 +59,7 @@ export default function PlayPage() {
       } else if (e.key === 'ArrowRight' && presentation.currentSlideIndex < presentation.slides.length - 1) {
         presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex + 1);
       } else if (e.key === 'Escape') {
-        router.push('/');
+        router.push('/edit');
       }
     };
 
@@ -157,7 +157,7 @@ export default function PlayPage() {
           style={{ height: `${mobileSplitPosition}%` }}
         >
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/edit')}
             className="absolute top-2 left-2 p-1.5 text-gray-400 hover:text-gray-700 rounded-full transition-colors z-10"
             aria-label="Exit play mode"
           >
@@ -220,7 +220,7 @@ export default function PlayPage() {
           style={{ width: `${splitPosition}%` }}
         >
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/edit')}
             className="absolute top-2 left-2 p-1.5 text-gray-400 hover:text-gray-700 rounded-full transition-colors z-10"
             aria-label="Exit play mode"
           >
