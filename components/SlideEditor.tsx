@@ -1,6 +1,6 @@
 "use client";
 
-import { SlideContent, QuoteContent, BulletsContent, ImageContent } from '@/lib/types';
+import { SlideContent, TitleContent, QuoteContent, BulletsContent, ImageContent } from '@/lib/types';
 import { useState, useRef } from 'react';
 import { Upload } from 'lucide-react';
 
@@ -11,10 +11,14 @@ interface SlideEditorProps {
 }
 
 export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorProps) {
-  const [currentType, setCurrentType] = useState<'quote' | 'bullets' | 'image'>(content.type);
+  const [currentType, setCurrentType] = useState<'title' | 'quote' | 'bullets' | 'image'>(content.type);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Store all content types separately to preserve when switching
+  const [titleData, setTitleData] = useState({
+    subtitle: content.type === 'title' ? content.subtitle || '' : '',
+  });
+  
   const [quoteData, setQuoteData] = useState({
     quote: content.type === 'quote' ? content.quote : '',
     author: content.type === 'quote' ? content.author || '' : '',
@@ -30,6 +34,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
   });
 
   const [title, setTitle] = useState<string>(() => {
+    if (content.type === 'title') return content.title;
     if (content.type === 'bullets') return content.title;
     if (content.type === 'quote') return content.title || '';
     return content.title || '';
@@ -38,7 +43,13 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
   const handleSave = () => {
     let finalContent: SlideContent;
     
-    if (currentType === 'bullets') {
+    if (currentType === 'title') {
+      finalContent = {
+        type: 'title',
+        title: title,
+        subtitle: titleData.subtitle,
+      };
+    } else if (currentType === 'bullets') {
       const cleanedBullets = bulletText
         .split('\n')
         .map(b => b.trim())
@@ -74,7 +85,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
     onClose();
   };
 
-  const handleTypeChange = (newType: 'quote' | 'bullets' | 'image') => {
+  const handleTypeChange = (newType: 'title' | 'quote' | 'bullets' | 'image') => {
     setCurrentType(newType);
   };
 
@@ -117,6 +128,17 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
           <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-50">
             <button
               type="button"
+              onClick={() => handleTypeChange('title')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                currentType === 'title'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Title
+            </button>
+            <button
+              type="button"
               onClick={() => handleTypeChange('quote')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
                 currentType === 'quote'
@@ -150,6 +172,25 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
             </button>
           </div>
         </div>
+
+        {currentType === 'title' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Subtitle (optional)
+              </label>
+              <input
+                type="text"
+                value={titleData.subtitle}
+                onChange={(e) =>
+                  setTitleData({ ...titleData, subtitle: e.target.value })
+                }
+                className="w-full p-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter subtitle..."
+              />
+            </div>
+          </div>
+        )}
 
         {currentType === 'quote' && (
           <div className="space-y-4">

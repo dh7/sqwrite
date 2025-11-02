@@ -1,4 +1,10 @@
-export type SlideType = 'quote' | 'bullets' | 'image';
+export type SlideType = 'title' | 'quote' | 'bullets' | 'image';
+
+export interface TitleContent {
+  type: 'title';
+  title: string;
+  subtitle?: string;
+}
 
 export interface QuoteContent {
   type: 'quote';
@@ -20,7 +26,7 @@ export interface ImageContent {
   alt?: string;
 }
 
-export type SlideContent = QuoteContent | BulletsContent | ImageContent;
+export type SlideContent = TitleContent | QuoteContent | BulletsContent | ImageContent;
 
 export interface Slide {
   id: string;

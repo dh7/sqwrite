@@ -21,8 +21,9 @@ export const createMindCacheTools = () => {
       parameters: z.object({
         slideNumber: z.number().describe('The slide number (1-based index)'),
         content: z.object({
-          type: z.enum(['quote', 'bullets', 'image']).describe('Type of slide content'),
+          type: z.enum(['title', 'quote', 'bullets', 'image']).describe('Type of slide content'),
           title: z.string().optional().describe('Title for all slide types'),
+          subtitle: z.string().optional().describe('Subtitle for title slides'),
           quote: z.string().optional().describe('Quote text for quote slides'),
           author: z.string().optional().describe('Author for quote slides'),
           bullets: z.array(z.string()).optional().describe('Bullet points for bullet slides'),
@@ -62,8 +63,9 @@ export const createMindCacheTools = () => {
       description: 'Add a new slide to the presentation',
       parameters: z.object({
         content: z.object({
-          type: z.enum(['quote', 'bullets', 'image']).describe('Type of slide content'),
+          type: z.enum(['title', 'quote', 'bullets', 'image']).describe('Type of slide content'),
           title: z.string().optional().describe('Title for all slide types'),
+          subtitle: z.string().optional().describe('Subtitle for title slides'),
           quote: z.string().optional(),
           author: z.string().optional(),
           bullets: z.array(z.string()).optional(),

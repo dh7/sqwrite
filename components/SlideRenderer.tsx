@@ -10,6 +10,19 @@ interface SlideRendererProps {
 export default function SlideRenderer({ content }: SlideRendererProps) {
   return (
     <div className="w-full max-w-[calc(100vh-12rem)] aspect-square mx-auto bg-white shadow-lg rounded-lg flex items-center justify-center p-4">
+      {content.type === 'title' && (
+        <div className="text-center max-w-3xl">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6">
+            {content.title}
+          </h1>
+          {content.subtitle && (
+            <p className="text-xl sm:text-2xl md:text-3xl text-gray-600">
+              {content.subtitle}
+            </p>
+          )}
+        </div>
+      )}
+
       {content.type === 'quote' && (
         <div className="text-center max-w-2xl">
           {content.title && (

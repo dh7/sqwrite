@@ -66,6 +66,7 @@ function SortableSlide({ slide, index }: SortableSlideProps) {
         </div>
       </div>
       <div className="text-sm text-gray-600 truncate flex-1">
+        {slide.content.type === 'title' && slide.content.title}
         {slide.content.type === 'bullets' && slide.content.title}
         {slide.content.type === 'quote' && (slide.content.title || slide.content.quote.substring(0, 50))}
         {slide.content.type === 'image' && (slide.content.title || 'Image slide')}
