@@ -56,16 +56,6 @@ export default function Chatbot() {
 
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <Bot className="w-6 h-6 text-blue-600" />
-          AI Assistant
-        </h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Ask me to help with your slides and speaker notes
-        </p>
-      </div>
-
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 mt-8">
