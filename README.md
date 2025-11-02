@@ -83,9 +83,18 @@ Press **Cmd+Shift+D** (Mac) or **Ctrl+Shift+D** (Windows/Linux) to open the Mind
 
 This is useful for debugging and understanding what's stored in memory.
 
+## MindCache Architecture
+
+MindCache is implemented **client-side only** for simplicity and reliability:
+- Single source of truth in the browser
+- Client sends STM snapshot to server for AI context
+- AI tools describe changes (don't mutate server state)
+- Client applies changes via `onToolCall` handler
+- Reactive UI updates via `subscribeToAll()`
+
 ## MindCache Structure
 
-The presentation data is stored in MindCache using individual keys with proper STM structure:
+The presentation data is stored in client-side MindCache using individual keys with proper STM structure:
 
 - `Presentation_Name` - The presentation title
 - `Current_Slide_Index` - Currently selected slide (0-based)

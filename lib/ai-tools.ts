@@ -1,10 +1,9 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import { MindCache } from 'mindcache';
 
 // Create AI tools for Vercel AI SDK to interact with MindCache
-// Uses individual MindCache keys with proper structure
-export const createMindCacheTools = (cache: MindCache) => {
+// Client-side only - tools just return what should be changed, client applies it
+export const createMindCacheTools = () => {
   return {
     updatePresentationTitle: tool({
       description: 'Update the presentation title',
@@ -12,8 +11,8 @@ export const createMindCacheTools = (cache: MindCache) => {
         title: z.string().describe('The new presentation title'),
       }),
       execute: async ({ title }) => {
-        cache.set('Presentation_Name', title);
-        return { success: true, message: 'Title updated' };
+        // Server just validates and returns - client applies the change
+        return { success: true, message: 'Title updated', action: 'update_title', data: { title } };
       },
     }),
 
@@ -32,16 +31,13 @@ export const createMindCacheTools = (cache: MindCache) => {
         }),
       }),
       execute: async ({ slideNumber, content }) => {
-        const slideNum = String(slideNumber).padStart(3, '0');
-        const key = `Slide_${slideNum}_content`;
-        
-        // Check if slide exists
-        if (!cache.has(key)) {
-          return { success: false, message: `Slide ${slideNumber} not found` };
-        }
-        
-        cache.set(key, content);
-        return { success: true, message: `Slide ${slideNumber} content updated` };
+        // Server just validates and returns - client applies the change
+        return { 
+          success: true, 
+          message: `Slide ${slideNumber} content updated`,
+          action: 'update_slide_content',
+          data: { slideNumber, content }
+        };
       },
     }),
     
@@ -52,11 +48,13 @@ export const createMindCacheTools = (cache: MindCache) => {
         notes: z.string().describe('The speaker notes in markdown format'),
       }),
       execute: async ({ slideNumber, notes }) => {
-        const slideNum = String(slideNumber).padStart(3, '0');
-        const key = `Slide_${slideNum}_notes`;
-        
-        cache.set(key, notes);
-        return { success: true, message: `Slide ${slideNumber} notes updated` };
+        // Server just validates and returns - client applies the change
+        return { 
+          success: true, 
+          message: `Slide ${slideNumber} notes updated`,
+          action: 'update_speaker_notes',
+          data: { slideNumber, notes }
+        };
       },
     }),
     
@@ -75,20 +73,13 @@ export const createMindCacheTools = (cache: MindCache) => {
         notes: z.string().default('').describe('Speaker notes for the new slide'),
       }),
       execute: async ({ content, notes }) => {
-        // Find the next slide number
-        const keys = cache.keys();
-        const slideNums = keys
-          .filter(k => k.match(/^Slide_\d{3}_content$/))
-          .map(k => parseInt(k.match(/Slide_(\d{3})_content/)?.[1] || '0'))
-          .filter(n => !isNaN(n));
-        
-        const nextNum = slideNums.length > 0 ? Math.max(...slideNums) + 1 : 1;
-        const slideNum = String(nextNum).padStart(3, '0');
-        
-        cache.set(`Slide_${slideNum}_content`, content);
-        cache.set(`Slide_${slideNum}_notes`, notes);
-        
-        return { success: true, message: `Added slide ${nextNum}`, slideNumber: nextNum };
+        // Server just validates and returns - client applies the change
+        return { 
+          success: true, 
+          message: 'Slide added',
+          action: 'add_slide',
+          data: { content, notes }
+        };
       },
     }),
   };

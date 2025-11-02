@@ -1,28 +1,21 @@
 import { google } from '@ai-sdk/google';
 import { streamText } from 'ai';
-import { MindCache } from 'mindcache';
 import { createMindCacheTools } from '@/lib/ai-tools';
 
 export const runtime = 'edge';
 
-// Create a server-side MindCache instance
-const serverCache = new MindCache();
-
 export async function POST(req: Request) {
   const { messages, mindcacheData } = await req.json();
 
-  // Sync client MindCache data to server
-  if (mindcacheData) {
-    Object.entries(mindcacheData).forEach(([key, value]) => {
-      serverCache.set(key, value);
-    });
-  }
+  // Generate STM prompt from client data (no server-side MindCache needed)
+  const stmPrompt = mindcacheData 
+    ? Object.entries(mindcacheData)
+        .map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)
+        .join(', ')
+    : '';
 
-  // Get tools for AI to interact with the presentation
-  const tools = createMindCacheTools(serverCache);
-
-  // Get system prompt with current MindCache state (this includes all keys/values)
-  const stmPrompt = serverCache.getSTM();
+  // Get tools for AI to interact with the presentation (no cache needed, tools just describe actions)
+  const tools = createMindCacheTools();
 
   const result = await streamText({
     model: google('gemini-2.5-flash'),
