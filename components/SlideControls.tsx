@@ -25,7 +25,7 @@ export default function SlideControls({
         <button
           onClick={onPrevious}
           disabled={currentIndex === 0}
-          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -37,7 +37,7 @@ export default function SlideControls({
         <button
           onClick={onNext}
           disabled={currentIndex >= totalSlides - 1}
-          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronRight className="w-5 h-5" />
         </button>

@@ -56,7 +56,7 @@ export default function SpeakerNotes({ notes, onUpdate }: SpeakerNotesProps) {
         <textarea
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
-          className="w-full h-40 sm:h-48 p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs sm:text-sm"
+          className="w-full h-40 sm:h-48 p-2 sm:p-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs sm:text-sm"
           placeholder="Write speaker notes in markdown..."
         />
       ) : (
