@@ -85,7 +85,7 @@ export default function TopBar({ presentationName, onNameChange, onReorder }: To
         <div className="flex gap-2">
           <button
             onClick={onReorder}
-            className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
           >
             <ArrowUpDown className="w-4 h-4" />
             <span className="hidden sm:inline">Re-order</span>
@@ -93,7 +93,7 @@ export default function TopBar({ presentationName, onNameChange, onReorder }: To
           
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Export</span>

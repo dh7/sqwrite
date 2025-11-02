@@ -80,6 +80,18 @@ export default function Home() {
     // No need to manually trigger refresh - MindCache subscription will handle it
   };
 
+  const handleDuplicateSlide = () => {
+    if (currentSlide) {
+      const duplicatedSlide: Slide = {
+        id: `slide-${Date.now()}`,
+        content: { ...currentSlide.content },
+        speakerNotes: currentSlide.speakerNotes,
+      };
+      presentationHelpers.addSlide(duplicatedSlide);
+      // No need to manually trigger refresh - MindCache subscription will handle it
+    }
+  };
+
   const handleDeleteSlide = () => {
     if (currentSlide && confirm('Are you sure you want to delete this slide?')) {
       presentationHelpers.deleteSlide(currentSlide.id);
@@ -140,6 +152,7 @@ export default function Home() {
             onPrevious={handlePrevious}
             onNext={handleNext}
             onAddSlide={handleAddSlide}
+            onDuplicateSlide={handleDuplicateSlide}
             onDeleteSlide={handleDeleteSlide}
           />
 
