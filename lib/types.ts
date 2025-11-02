@@ -2,6 +2,7 @@ export type SlideType = 'quote' | 'bullets' | 'image';
 
 export interface QuoteContent {
   type: 'quote';
+  title?: string;
   quote: string;
   author?: string;
 }
@@ -14,6 +15,7 @@ export interface BulletsContent {
 
 export interface ImageContent {
   type: 'image';
+  title?: string;
   imageUrl: string;
   alt?: string;
 }

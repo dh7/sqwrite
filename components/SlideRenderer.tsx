@@ -12,6 +12,11 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
     <div className="w-full aspect-square bg-white shadow-lg rounded-lg flex items-center justify-center p-4">
       {content.type === 'quote' && (
         <div className="text-center max-w-2xl">
+          {content.title && (
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">
+              {content.title}
+            </h2>
+          )}
           <blockquote className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-serif italic text-gray-800 mb-3 md:mb-4">
             "{content.quote}"
           </blockquote>
@@ -40,13 +45,20 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
       )}
 
       {content.type === 'image' && (
-        <div className="relative w-full h-full">
-          <Image
-            src={content.imageUrl}
-            alt={content.alt || 'Slide image'}
-            fill
-            className="object-contain"
-          />
+        <div className="w-full h-full flex flex-col">
+          {content.title && (
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 text-center">
+              {content.title}
+            </h2>
+          )}
+          <div className="relative flex-1">
+            <Image
+              src={content.imageUrl}
+              alt={content.alt || 'Slide image'}
+              fill
+              className="object-contain"
+            />
+          </div>
         </div>
       )}
     </div>

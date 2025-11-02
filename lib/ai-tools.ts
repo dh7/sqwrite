@@ -22,9 +22,9 @@ export const createMindCacheTools = () => {
         slideNumber: z.number().describe('The slide number (1-based index)'),
         content: z.object({
           type: z.enum(['quote', 'bullets', 'image']).describe('Type of slide content'),
+          title: z.string().optional().describe('Title for all slide types'),
           quote: z.string().optional().describe('Quote text for quote slides'),
           author: z.string().optional().describe('Author for quote slides'),
-          title: z.string().optional().describe('Title for bullet slides'),
           bullets: z.array(z.string()).optional().describe('Bullet points for bullet slides'),
           imageUrl: z.string().optional().describe('Image URL for image slides'),
           alt: z.string().optional().describe('Alt text for image slides'),
@@ -63,9 +63,9 @@ export const createMindCacheTools = () => {
       parameters: z.object({
         content: z.object({
           type: z.enum(['quote', 'bullets', 'image']).describe('Type of slide content'),
+          title: z.string().optional().describe('Title for all slide types'),
           quote: z.string().optional(),
           author: z.string().optional(),
-          title: z.string().optional(),
           bullets: z.array(z.string()).optional(),
           imageUrl: z.string().optional(),
           alt: z.string().optional(),

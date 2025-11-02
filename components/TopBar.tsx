@@ -77,7 +77,7 @@ export default function TopBar({ presentationName, onNameChange }: TopBarProps) 
           type="text"
           value={presentationName}
           onChange={(e) => onNameChange(e.target.value)}
-          className="text-base sm:text-xl font-bold border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1 flex-1 max-w-md"
+          className="text-base sm:text-xl font-bold bg-transparent text-gray-900 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1 flex-1 max-w-md"
           placeholder="Presentation Name"
         />
         

@@ -126,7 +126,7 @@ export default function Chatbot() {
             value={input}
             onChange={handleInputChange}
             placeholder="Ask me to help..."
-            className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            className="flex-1 p-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             disabled={isLoading}
           />
           <button

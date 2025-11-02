@@ -20,7 +20,7 @@ export default function SlideControls({
   onDeleteSlide,
 }: SlideControlsProps) {
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between bg-white rounded-lg shadow p-4 gap-3 sm:gap-0">
+    <div className="flex flex-col sm:flex-row items-center justify-between bg-white rounded-lg shadow p-4 gap-3">
       <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
         <button
           onClick={onPrevious}
@@ -46,7 +46,7 @@ export default function SlideControls({
       <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
         <button
           onClick={onAddSlide}
-          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
         >
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Add Slide</span>
