@@ -72,6 +72,17 @@ Ask the AI to help with your presentation:
 
 The AI has access to your entire presentation through MindCache and can modify slides and speaker notes directly.
 
+### MindCache Debug View
+
+Press **Cmd+Shift+D** (Mac) or **Ctrl+Shift+D** (Windows/Linux) to open the MindCache debug view. This lets you:
+- View all stored data in MindCache
+- Edit values directly (in JSON format)
+- Add new entries
+- Delete entries
+- Clear all data
+
+This is useful for debugging and understanding what's stored in memory.
+
 ## Tech Stack
 
 - **Framework**: Next.js 14 with App Router

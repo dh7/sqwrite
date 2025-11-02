@@ -6,6 +6,7 @@ import SpeakerNotes from '@/components/SpeakerNotes';
 import SlideControls from '@/components/SlideControls';
 import SlideEditor from '@/components/SlideEditor';
 import Chatbot from '@/components/Chatbot';
+import MindCacheDebugView from '@/components/MindCacheDebugView';
 import { presentationHelpers } from '@/lib/mindcache-store';
 import { Presentation, Slide, SlideContent } from '@/lib/types';
 import { Edit2 } from 'lucide-react';
@@ -13,6 +14,7 @@ import { Edit2 } from 'lucide-react';
 export default function Home() {
   const [presentation, setPresentation] = useState<Presentation | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Load presentation from MindCache
@@ -34,6 +36,15 @@ export default function Home() {
     };
     window.addEventListener('presentation-updated', handleUpdate);
 
+    // Keyboard shortcut for debug view: Cmd+Shift+D
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        setIsDebugOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     // Poll for updates from MindCache (in case AI modifies it)
     const interval = setInterval(() => {
       loadPresentation();
@@ -41,6 +52,7 @@ export default function Home() {
 
     return () => {
       window.removeEventListener('presentation-updated', handleUpdate);
+      window.removeEventListener('keydown', handleKeyDown);
       clearInterval(interval);
     };
   }, [refreshKey]);
@@ -175,6 +187,12 @@ export default function Home() {
           onClose={() => setIsEditing(false)}
         />
       )}
+
+      {/* MindCache Debug View */}
+      <MindCacheDebugView 
+        isOpen={isDebugOpen} 
+        onClose={() => setIsDebugOpen(false)} 
+      />
     </div>
   );
 }
