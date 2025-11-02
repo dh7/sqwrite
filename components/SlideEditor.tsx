@@ -11,15 +11,34 @@ interface SlideEditorProps {
 }
 
 export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorProps) {
-  const [editedContent, setEditedContent] = useState<SlideContent>(content);
+  const [currentType, setCurrentType] = useState<'quote' | 'bullets' | 'image'>(content.type);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [bulletText, setBulletText] = useState<string>(() => 
+  
+  // Store all content types separately to preserve when switching
+  const [quoteData, setQuoteData] = useState({
+    quote: content.type === 'quote' ? content.quote : '',
+    author: content.type === 'quote' ? content.author || '' : '',
+  });
+  
+  const [bulletText, setBulletText] = useState<string>(
     content.type === 'bullets' ? content.bullets.join('\n') : ''
   );
+  
+  const [imageData, setImageData] = useState({
+    imageUrl: content.type === 'image' ? content.imageUrl : '',
+    alt: content.type === 'image' ? content.alt || '' : '',
+  });
+
+  const [title, setTitle] = useState<string>(() => {
+    if (content.type === 'bullets') return content.title;
+    if (content.type === 'quote') return content.title || '';
+    return content.title || '';
+  });
 
   const handleSave = () => {
-    // Clean up bullets before saving
-    if (editedContent.type === 'bullets') {
+    let finalContent: SlideContent;
+    
+    if (currentType === 'bullets') {
       const cleanedBullets = bulletText
         .split('\n')
         .map(b => b.trim())
@@ -30,67 +49,44 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
         return;
       }
       
-      onUpdate({
-        ...editedContent,
+      finalContent = {
+        type: 'bullets',
+        title: title,
         bullets: cleanedBullets.length > 0 ? cleanedBullets : [''],
-      });
+      };
+    } else if (currentType === 'quote') {
+      finalContent = {
+        type: 'quote',
+        title: title,
+        quote: quoteData.quote,
+        author: quoteData.author,
+      };
     } else {
-      onUpdate(editedContent);
+      finalContent = {
+        type: 'image',
+        title: title,
+        imageUrl: imageData.imageUrl,
+        alt: imageData.alt,
+      };
     }
+    
+    onUpdate(finalContent);
     onClose();
   };
 
-  const [title, setTitle] = useState<string>(() => {
-    if (content.type === 'bullets') return content.title;
-    if (content.type === 'quote') return content.title || '';
-    return content.title || '';
-  });
-
   const handleTypeChange = (newType: 'quote' | 'bullets' | 'image') => {
-    if (newType === 'quote') {
-      setEditedContent({
-        type: 'quote',
-        title: title,
-        quote: '',
-        author: '',
-      });
-    } else if (newType === 'bullets') {
-      setBulletText(''); // Reset bullet text
-      setEditedContent({
-        type: 'bullets',
-        title: title,
-        bullets: [''],
-      });
-    } else if (newType === 'image') {
-      setEditedContent({
-        type: 'image',
-        title: title,
-        imageUrl: '',
-        alt: '',
-      });
-    }
+    setCurrentType(newType);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/') && editedContent.type === 'image') {
+    if (file && file.type.startsWith('image/') && currentType === 'image') {
       const reader = new FileReader();
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
-        setEditedContent({ ...editedContent, imageUrl: dataUrl });
+        setImageData({ ...imageData, imageUrl: dataUrl });
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  const handleTitleChange = (newTitle: string) => {
-    setTitle(newTitle);
-    if (editedContent.type === 'bullets') {
-      setEditedContent({ ...editedContent, title: newTitle });
-    } else if (editedContent.type === 'quote') {
-      setEditedContent({ ...editedContent, title: newTitle });
-    } else if (editedContent.type === 'image') {
-      setEditedContent({ ...editedContent, title: newTitle });
     }
   };
 
@@ -107,7 +103,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
           <input
             type="text"
             value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
+            onChange={(e) => setTitle(e.target.value)}
             className="w-full p-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Enter title..."
           />
@@ -123,7 +119,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
               type="button"
               onClick={() => handleTypeChange('quote')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                editedContent.type === 'quote'
+                currentType === 'quote'
                   ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
@@ -134,7 +130,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
               type="button"
               onClick={() => handleTypeChange('bullets')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                editedContent.type === 'bullets'
+                currentType === 'bullets'
                   ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
@@ -145,7 +141,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
               type="button"
               onClick={() => handleTypeChange('image')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                editedContent.type === 'image'
+                currentType === 'image'
                   ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
@@ -155,16 +151,16 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
           </div>
         </div>
 
-        {editedContent.type === 'quote' && (
+        {currentType === 'quote' && (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Quote
               </label>
               <textarea
-                value={editedContent.quote}
+                value={quoteData.quote}
                 onChange={(e) =>
-                  setEditedContent({ ...editedContent, quote: e.target.value })
+                  setQuoteData({ ...quoteData, quote: e.target.value })
                 }
                 className="w-full p-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows={4}
@@ -177,9 +173,9 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
               </label>
               <input
                 type="text"
-                value={editedContent.author || ''}
+                value={quoteData.author}
                 onChange={(e) =>
-                  setEditedContent({ ...editedContent, author: e.target.value })
+                  setQuoteData({ ...quoteData, author: e.target.value })
                 }
                 className="w-full p-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Author name..."
@@ -188,7 +184,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
           </div>
         )}
 
-        {editedContent.type === 'bullets' && (
+        {currentType === 'bullets' && (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -219,7 +215,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
           </div>
         )}
 
-        {editedContent.type === 'image' && (
+        {currentType === 'image' && (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -250,16 +246,16 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
               </label>
               <input
                 type="text"
-                value={editedContent.imageUrl}
+                value={imageData.imageUrl}
                 onChange={(e) =>
-                  setEditedContent({ ...editedContent, imageUrl: e.target.value })
+                  setImageData({ ...imageData, imageUrl: e.target.value })
                 }
                 className="w-full p-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="https://example.com/image.jpg"
               />
             </div>
 
-            {editedContent.imageUrl && (
+            {imageData.imageUrl && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Preview
@@ -267,7 +263,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
                 <div className="border border-gray-300 rounded-lg p-2 bg-gray-50">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={editedContent.imageUrl}
+                    src={imageData.imageUrl}
                     alt="Preview"
                     className="max-h-48 mx-auto object-contain"
                   />
@@ -281,9 +277,9 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
               </label>
               <input
                 type="text"
-                value={editedContent.alt || ''}
+                value={imageData.alt}
                 onChange={(e) =>
-                  setEditedContent({ ...editedContent, alt: e.target.value })
+                  setImageData({ ...imageData, alt: e.target.value })
                 }
                 className="w-full p-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Description of the image..."
