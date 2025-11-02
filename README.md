@@ -83,12 +83,31 @@ Press **Cmd+Shift+D** (Mac) or **Ctrl+Shift+D** (Windows/Linux) to open the Mind
 
 This is useful for debugging and understanding what's stored in memory.
 
+## MindCache Structure
+
+The presentation data is stored in MindCache using individual keys with proper STM structure:
+
+- `Presentation_Name` - The presentation title
+- `Current_Slide_Index` - Currently selected slide (0-based)
+- `Slide_001_content` - Content for slide 1 (JSON object)
+- `Slide_001_notes` - Speaker notes for slide 1 (markdown)
+- `Slide_002_content` - Content for slide 2
+- `Slide_002_notes` - Speaker notes for slide 2
+- etc.
+
+This structure allows:
+- The AI to see all data in its system prompt via `getSTM()`
+- Individual key updates without rewriting the entire presentation
+- Better change tracking and debugging
+- Clean separation of concerns
+- Reactive updates via MindCache's `subscribeToAll()` - all components automatically update when any key changes
+
 ## Tech Stack
 
 - **Framework**: Next.js 14 with App Router
 - **UI**: React 18, Tailwind CSS
-- **AI**: Vercel AI SDK
-- **Storage**: MindCache for client-side memory
+- **AI**: Vercel AI SDK with Google Gemini
+- **Storage**: MindCache for client-side memory (STM pattern)
 - **Icons**: Lucide React
 - **Markdown**: react-markdown
 

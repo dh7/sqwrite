@@ -12,15 +12,36 @@ export default function Chatbot() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: '/api/chat',
     body: {
-      // Send current presentation data with each request
-      presentation: typeof window !== 'undefined' 
-        ? (window as any).__presentationData 
+      // Send all MindCache data with each request
+      mindcacheData: typeof window !== 'undefined' 
+        ? presentationCache.getAll()
         : null,
     },
-    onFinish: (message) => {
-      // Force refresh after AI responds
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('presentation-updated'));
+    onToolCall: ({ toolCall }) => {
+      // When AI calls a tool, apply the changes to client MindCache
+      console.log('Tool called:', toolCall.toolName, toolCall.args);
+      
+      if (toolCall.toolName === 'updatePresentationTitle') {
+        presentationCache.set('Presentation_Name', toolCall.args.title);
+      } else if (toolCall.toolName === 'updateSlideContent') {
+        const slideNum = String(toolCall.args.slideNumber).padStart(3, '0');
+        presentationCache.set(`Slide_${slideNum}_content`, toolCall.args.content);
+      } else if (toolCall.toolName === 'updateSpeakerNotes') {
+        const slideNum = String(toolCall.args.slideNumber).padStart(3, '0');
+        presentationCache.set(`Slide_${slideNum}_notes`, toolCall.args.notes);
+      } else if (toolCall.toolName === 'addSlide') {
+        // Find the next slide number
+        const keys = presentationCache.keys();
+        const slideNums = keys
+          .filter(k => k.match(/^Slide_\d{3}_content$/))
+          .map(k => parseInt(k.match(/Slide_(\d{3})_content/)?.[1] || '0'))
+          .filter(n => !isNaN(n));
+        
+        const nextNum = slideNums.length > 0 ? Math.max(...slideNums) + 1 : 1;
+        const slideNum = String(nextNum).padStart(3, '0');
+        
+        presentationCache.set(`Slide_${slideNum}_content`, toolCall.args.content);
+        presentationCache.set(`Slide_${slideNum}_notes`, toolCall.args.notes || '');
       }
     },
   });

@@ -40,10 +40,7 @@ export default function MindCacheDebugView({ isOpen, onClose }: MindCacheDebugVi
       presentationCache.set(key, parsed);
       setEditingKey(null);
       setRefreshKey(k => k + 1);
-      // Trigger presentation update
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('presentation-updated'));
-      }
+      // MindCache subscription will automatically update all components
     } catch (e) {
       alert('Invalid JSON format');
     }
@@ -53,10 +50,7 @@ export default function MindCacheDebugView({ isOpen, onClose }: MindCacheDebugVi
     if (confirm(`Delete "${key}" from MindCache?`)) {
       presentationCache.delete(key);
       setRefreshKey(k => k + 1);
-      // Trigger presentation update
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('presentation-updated'));
-      }
+      // MindCache subscription will automatically update all components
     }
   };
 
@@ -80,10 +74,7 @@ export default function MindCacheDebugView({ isOpen, onClose }: MindCacheDebugVi
     if (confirm('Clear all MindCache data?')) {
       presentationCache.clear();
       setRefreshKey(k => k + 1);
-      // Trigger presentation update
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('presentation-updated'));
-      }
+      // MindCache subscription will automatically update all components
     }
   };
 

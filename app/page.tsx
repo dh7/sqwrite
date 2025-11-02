@@ -7,7 +7,7 @@ import SlideControls from '@/components/SlideControls';
 import SlideEditor from '@/components/SlideEditor';
 import Chatbot from '@/components/Chatbot';
 import MindCacheDebugView from '@/components/MindCacheDebugView';
-import { presentationHelpers } from '@/lib/mindcache-store';
+import { presentationHelpers, presentationCache } from '@/lib/mindcache-store';
 import { Presentation, Slide, SlideContent } from '@/lib/types';
 import { Edit2 } from 'lucide-react';
 
@@ -15,26 +15,22 @@ export default function Home() {
   const [presentation, setPresentation] = useState<Presentation | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Load presentation from MindCache
+  // Load presentation from MindCache and subscribe to changes
   useEffect(() => {
     const loadPresentation = () => {
       const prez = presentationHelpers.getPresentation();
       setPresentation(prez);
-      // Make presentation available to chatbot
-      if (typeof window !== 'undefined') {
-        (window as any).__presentationData = prez;
-      }
     };
 
+    // Initial load
     loadPresentation();
 
-    // Listen for AI updates
-    const handleUpdate = () => {
+    // Subscribe to all MindCache changes
+    const handleMindCacheUpdate = () => {
       loadPresentation();
     };
-    window.addEventListener('presentation-updated', handleUpdate);
+    presentationCache.subscribeToAll(handleMindCacheUpdate);
 
     // Keyboard shortcut for debug view: Cmd+Shift+D
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -45,31 +41,25 @@ export default function Home() {
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    // Poll for updates from MindCache (in case AI modifies it)
-    const interval = setInterval(() => {
-      loadPresentation();
-    }, 1000);
-
     return () => {
-      window.removeEventListener('presentation-updated', handleUpdate);
+      presentationCache.unsubscribeFromAll(handleMindCacheUpdate);
       window.removeEventListener('keydown', handleKeyDown);
-      clearInterval(interval);
     };
-  }, [refreshKey]);
+  }, []);
 
   const currentSlide = presentation?.slides[presentation.currentSlideIndex];
 
   const handlePrevious = () => {
     if (presentation && presentation.currentSlideIndex > 0) {
       presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex - 1);
-      setRefreshKey(k => k + 1);
+      // No need to manually trigger refresh - MindCache subscription will handle it
     }
   };
 
   const handleNext = () => {
     if (presentation && presentation.currentSlideIndex < presentation.slides.length - 1) {
       presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex + 1);
-      setRefreshKey(k => k + 1);
+      // No need to manually trigger refresh - MindCache subscription will handle it
     }
   };
 
@@ -84,27 +74,27 @@ export default function Home() {
       speakerNotes: 'Add your speaker notes here.',
     };
     presentationHelpers.addSlide(newSlide);
-    setRefreshKey(k => k + 1);
+    // No need to manually trigger refresh - MindCache subscription will handle it
   };
 
   const handleDeleteSlide = () => {
     if (currentSlide && confirm('Are you sure you want to delete this slide?')) {
       presentationHelpers.deleteSlide(currentSlide.id);
-      setRefreshKey(k => k + 1);
+      // No need to manually trigger refresh - MindCache subscription will handle it
     }
   };
 
   const handleUpdateSlideContent = (content: SlideContent) => {
     if (currentSlide) {
       presentationHelpers.updateSlide(currentSlide.id, { content });
-      setRefreshKey(k => k + 1);
+      // No need to manually trigger refresh - MindCache subscription will handle it
     }
   };
 
   const handleUpdateSpeakerNotes = (notes: string) => {
     if (currentSlide) {
       presentationHelpers.updateSlide(currentSlide.id, { speakerNotes: notes });
-      setRefreshKey(k => k + 1);
+      // No need to manually trigger refresh - MindCache subscription will handle it
     }
   };
 
@@ -135,12 +125,8 @@ export default function Home() {
               type="text"
               value={presentation.title}
               onChange={(e) => {
-                const prez = presentationHelpers.getPresentation();
-                if (prez) {
-                  prez.title = e.target.value;
-                  presentationHelpers.setPresentation(prez);
-                  setRefreshKey(k => k + 1);
-                }
+                presentationCache.set('Presentation_Name', e.target.value);
+                // MindCache subscription will automatically update the UI
               }}
               className="text-2xl font-bold w-full border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
             />
