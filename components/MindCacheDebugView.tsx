@@ -100,7 +100,7 @@ export default function MindCacheDebugView({ isOpen, onClose }: MindCacheDebugVi
             </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
             >
               <X className="w-6 h-6" />
             </button>
@@ -125,7 +125,7 @@ export default function MindCacheDebugView({ isOpen, onClose }: MindCacheDebugVi
                       </button>
                       <button
                         onClick={() => setEditingKey(null)}
-                        className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
                       >
                         Cancel
                       </button>
@@ -155,10 +155,10 @@ export default function MindCacheDebugView({ isOpen, onClose }: MindCacheDebugVi
                 <textarea
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
-                  className="w-full h-64 p-2 font-mono text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full h-64 p-2 bg-white text-gray-900 font-mono text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               ) : (
-                <pre className="bg-gray-50 p-3 rounded overflow-x-auto text-sm">
+                <pre className="bg-gray-50 p-3 rounded overflow-x-auto text-sm text-gray-900">
                   {JSON.stringify(value, null, 2)}
                 </pre>
               )}
@@ -181,7 +181,7 @@ export default function MindCacheDebugView({ isOpen, onClose }: MindCacheDebugVi
                   value={newKey}
                   onChange={(e) => setNewKey(e.target.value)}
                   placeholder="my-key"
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -192,7 +192,7 @@ export default function MindCacheDebugView({ isOpen, onClose }: MindCacheDebugVi
                   value={newValue}
                   onChange={(e) => setNewValue(e.target.value)}
                   placeholder='{"example": "value"}'
-                  className="w-full h-24 p-2 font-mono text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full h-24 p-2 bg-white text-gray-900 font-mono text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <button
