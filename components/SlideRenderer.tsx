@@ -9,7 +9,7 @@ interface SlideRendererProps {
 
 export default function SlideRenderer({ content }: SlideRendererProps) {
   return (
-    <div className="w-full aspect-square bg-white shadow-lg rounded-lg flex items-center justify-center p-4">
+    <div className="w-full max-w-[calc(100vh-12rem)] aspect-square mx-auto bg-white shadow-lg rounded-lg flex items-center justify-center p-4">
       {content.type === 'quote' && (
         <div className="text-center max-w-2xl">
           {content.title && (
