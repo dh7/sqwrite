@@ -96,8 +96,8 @@ export default function PlayPage() {
         presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex - 1);
       } else if (e.key === 'ArrowRight' && presentation.currentSlideIndex < presentation.slides.length - 1) {
         presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex + 1);
-      } else if (e.key === 'Escape' && !loadedFromUrl) {
-        router.push('/edit');
+      } else if (e.key === 'Escape') {
+        router.push(loadedFromUrl ? '/' : '/edit');
       }
     };
 
@@ -214,15 +214,13 @@ export default function PlayPage() {
           className="flex flex-col overflow-hidden relative flex-shrink-0"
           style={{ height: `${mobileSplitPosition}%` }}
         >
-          {!loadedFromUrl && (
-            <button
-              onClick={() => router.push('/edit')}
-              className="absolute top-2 left-2 p-1.5 text-gray-400 hover:text-gray-700 rounded-full transition-colors z-10"
-              aria-label="Exit play mode"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
+          <button
+            onClick={() => router.push(loadedFromUrl ? '/' : '/edit')}
+            className="absolute top-2 left-2 p-1.5 text-gray-400 hover:text-gray-700 rounded-full transition-colors z-10"
+            aria-label="Exit play mode"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
           {/* Square slide - takes most space */}
           <div className="flex-1 flex items-center justify-center p-2 overflow-hidden">
@@ -279,15 +277,13 @@ export default function PlayPage() {
           className="flex flex-col items-center justify-center p-0 relative"
           style={{ width: `${splitPosition}%` }}
         >
-          {!loadedFromUrl && (
-            <button
-              onClick={() => router.push('/edit')}
-              className="absolute top-2 left-2 p-1.5 text-gray-400 hover:text-gray-700 rounded-full transition-colors z-10"
-              aria-label="Exit play mode"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
+          <button
+            onClick={() => router.push(loadedFromUrl ? '/' : '/edit')}
+            className="absolute top-2 left-2 p-1.5 text-gray-400 hover:text-gray-700 rounded-full transition-colors z-10"
+            aria-label="Exit play mode"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
           <div className="flex flex-col items-center gap-0 w-full max-w-[70vmin]">
             <div className="w-full">
