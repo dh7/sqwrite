@@ -21,14 +21,16 @@ export default function Chatbot() {
       // When AI calls a tool, apply the changes to client MindCache
       console.log('Tool called:', toolCall.toolName, toolCall.args);
       
+      const args = toolCall.args as any;
+      
       if (toolCall.toolName === 'updatePresentationTitle') {
-        presentationCache.set('Presentation_Name', toolCall.args.title);
+        presentationCache.set('Presentation_Name', args.title);
       } else if (toolCall.toolName === 'updateSlideContent') {
-        const slideNum = String(toolCall.args.slideNumber).padStart(3, '0');
-        presentationCache.set(`Slide_${slideNum}_content`, toolCall.args.content);
+        const slideNum = String(args.slideNumber).padStart(3, '0');
+        presentationCache.set(`Slide_${slideNum}_content`, args.content);
       } else if (toolCall.toolName === 'updateSpeakerNotes') {
-        const slideNum = String(toolCall.args.slideNumber).padStart(3, '0');
-        presentationCache.set(`Slide_${slideNum}_notes`, toolCall.args.notes);
+        const slideNum = String(args.slideNumber).padStart(3, '0');
+        presentationCache.set(`Slide_${slideNum}_notes`, args.notes);
       } else if (toolCall.toolName === 'addSlide') {
         // Find the next slide number
         const keys = presentationCache.keys();
@@ -40,8 +42,8 @@ export default function Chatbot() {
         const nextNum = slideNums.length > 0 ? Math.max(...slideNums) + 1 : 1;
         const slideNum = String(nextNum).padStart(3, '0');
         
-        presentationCache.set(`Slide_${slideNum}_content`, toolCall.args.content);
-        presentationCache.set(`Slide_${slideNum}_notes`, toolCall.args.notes || '');
+        presentationCache.set(`Slide_${slideNum}_content`, args.content);
+        presentationCache.set(`Slide_${slideNum}_notes`, args.notes || '');
       }
     },
   });
