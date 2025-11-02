@@ -81,13 +81,24 @@ export default function Home() {
   };
 
   const handleDuplicateSlide = () => {
-    if (currentSlide) {
+    if (currentSlide && presentation) {
+      // Deep copy the content
+      let contentCopy: SlideContent;
+      if (currentSlide.content.type === 'bullets') {
+        contentCopy = {
+          ...currentSlide.content,
+          bullets: [...currentSlide.content.bullets],
+        };
+      } else {
+        contentCopy = { ...currentSlide.content };
+      }
+
       const duplicatedSlide: Slide = {
         id: `slide-${Date.now()}`,
-        content: { ...currentSlide.content },
+        content: contentCopy,
         speakerNotes: currentSlide.speakerNotes,
       };
-      presentationHelpers.addSlide(duplicatedSlide);
+      presentationHelpers.insertSlideAfter(duplicatedSlide, presentation.currentSlideIndex);
       // No need to manually trigger refresh - MindCache subscription will handle it
     }
   };

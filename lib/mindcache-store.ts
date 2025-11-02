@@ -91,6 +91,31 @@ export const presentationHelpers = {
     presentationCache.set(`Slide_${slideNum}_notes`, slide.speakerNotes);
   },
 
+  insertSlideAfter: (slide: Slide, afterIndex: number): void => {
+    const presentation = presentationHelpers.getPresentation();
+    if (!presentation) return;
+
+    // Shift all slides after afterIndex up by one
+    for (let i = presentation.slides.length - 1; i > afterIndex; i--) {
+      const oldNum = String(i + 1).padStart(3, '0');
+      const newNum = String(i + 2).padStart(3, '0');
+      
+      const content = presentationCache.get(`Slide_${oldNum}_content`);
+      const notes = presentationCache.get(`Slide_${oldNum}_notes`);
+      
+      presentationCache.set(`Slide_${newNum}_content`, content);
+      presentationCache.set(`Slide_${newNum}_notes`, notes);
+    }
+
+    // Insert the new slide
+    const newSlideNum = String(afterIndex + 2).padStart(3, '0');
+    presentationCache.set(`Slide_${newSlideNum}_content`, slide.content);
+    presentationCache.set(`Slide_${newSlideNum}_notes`, slide.speakerNotes);
+
+    // Update current slide to the newly inserted slide
+    presentationCache.set('Current_slide', `Slide_${newSlideNum}`);
+  },
+
   deleteSlide: (slideId: string): void => {
     const presentation = presentationHelpers.getPresentation();
     if (!presentation) return;
