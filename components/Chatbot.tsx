@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from 'ai/react';
-import { Send, Bot, User } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 import { presentationCache } from '@/lib/mindcache-store';
@@ -59,7 +59,6 @@ export default function Chatbot() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 mt-4 sm:mt-8">
-            <Bot className="w-10 sm:w-12 h-10 sm:h-12 mx-auto mb-2 text-gray-400" />
             <p className="text-sm sm:text-base">Start a conversation to edit your presentation</p>
             <p className="text-xs sm:text-sm mt-2">Try asking:</p>
             <ul className="text-xs sm:text-sm text-left max-w-xs mx-auto mt-2 space-y-1 px-4">
@@ -73,16 +72,10 @@ export default function Chatbot() {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex gap-3 ${
+            className={`flex ${
               message.role === 'user' ? 'justify-end' : 'justify-start'
             }`}
           >
-            {message.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-5 h-5 text-blue-600" />
-              </div>
-            )}
-            
             <div
               className={`max-w-[80%] rounded-lg p-3 ${
                 message.role === 'user'
@@ -92,20 +85,11 @@ export default function Chatbot() {
             >
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
             </div>
-
-            {message.role === 'user' && (
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                <User className="w-5 h-5 text-gray-600" />
-              </div>
-            )}
           </div>
         ))}
 
         {isLoading && (
-          <div className="flex gap-3 justify-start">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-              <Bot className="w-5 h-5 text-blue-600" />
-            </div>
+          <div className="flex justify-start">
             <div className="bg-gray-100 rounded-lg p-3">
               <div className="flex gap-1">
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
