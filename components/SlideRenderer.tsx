@@ -9,7 +9,7 @@ interface SlideRendererProps {
 
 export default function SlideRenderer({ content }: SlideRendererProps) {
   return (
-    <div className="w-full max-w-[calc(100vh-12rem)] aspect-square mx-auto bg-white shadow-lg rounded-lg flex items-center justify-center p-4">
+    <div className="w-full h-full max-w-full max-h-full aspect-square mx-auto bg-white shadow-lg rounded-lg flex items-center justify-center p-4">
       {content.type === 'title' && (
         <div className="text-center max-w-3xl">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6">
