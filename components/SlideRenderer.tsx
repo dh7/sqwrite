@@ -25,7 +25,7 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
 
     // Helper function to wrap text
     const wrapText = (text: string, maxWidth: number, fontSize: number): string[] => {
-      ctx.font = `${fontSize}px sans-serif`;
+      ctx.font = `${fontSize}px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif`;
       const words = text.split(' ');
       const lines: string[] = [];
       let currentLine = '';
@@ -52,13 +52,13 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
       const titleLines = wrapText(content.title, CANVAS_SIZE - 120, 72);
       const startY = content.subtitle ? CANVAS_SIZE / 2 - 80 : CANVAS_SIZE / 2 - 36;
       
-      ctx.font = 'bold 72px "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif';
+      ctx.font = 'bold 72px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
       titleLines.forEach((line, i) => {
         ctx.fillText(line, CANVAS_SIZE / 2, startY + i * 80);
       });
 
       if (content.subtitle) {
-        ctx.font = '36px "Georgia", "Times New Roman", serif';
+        ctx.font = '36px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
         ctx.fillStyle = '#6b7280';
         const subtitleLines = wrapText(content.subtitle, CANVAS_SIZE - 120, 36);
         subtitleLines.forEach((line, i) => {
@@ -73,7 +73,7 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
       // Draw title at top-left if exists
       if (content.title) {
         ctx.textAlign = 'left';
-        ctx.font = 'bold 40px "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif';
+        ctx.font = 'bold 40px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
         ctx.fillStyle = '#1a1a1a';
         const titleLines = wrapText(content.title, CANVAS_SIZE - 120, 40);
         titleLines.forEach((line, i) => {
@@ -119,7 +119,7 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
       // Draw author at bottom-right
       if (content.author) {
         ctx.textAlign = 'right';
-        ctx.font = 'italic 32px "Georgia", serif';
+        ctx.font = 'italic 32px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
         ctx.fillStyle = '#9ca3af';
         ctx.fillText(`— ${content.author}`, CANVAS_SIZE - 100, CANVAS_SIZE - 80);
       }
@@ -128,7 +128,7 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
     if (content.type === 'bullets') {
       ctx.textAlign = 'left';
       
-      ctx.font = 'bold 40px "SF Pro Display", "Arial", sans-serif';
+      ctx.font = 'bold 40px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
       ctx.fillStyle = '#1a1a1a';
       const titleLines = wrapText(content.title, CANVAS_SIZE - 120, 40);
       let currentY = 120;
@@ -138,24 +138,40 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
       });
       currentY += titleLines.length * 50 + 60;
 
-      ctx.font = '26px "Georgia", serif';
+      ctx.font = '30px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
       ctx.fillStyle = '#4b5563';
       
+      // Measure bullet character width
+      ctx.font = '16px "Georgia", serif';
+      const bulletChar = '•';
+      const bulletWidth = ctx.measureText(bulletChar).width;
+      const bulletSpacing = 12;
+      const bulletX = 60;
+      const textStartX = bulletX + bulletWidth + bulletSpacing;
+      const textWidth = CANVAS_SIZE - textStartX - 60; // Available width for text
+      
+      ctx.font = '30px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
+      
       content.bullets.forEach(bullet => {
-        const bulletLines = wrapText(bullet, CANVAS_SIZE - 120, 26);
+        const bulletLines = wrapText(bullet, textWidth, 30);
         bulletLines.forEach((line, i) => {
           if (i === 0) {
-            // First line aligned with title
-            ctx.textAlign = 'left';
-            ctx.fillText(line, 60, currentY);
+            // Draw bullet point
+            ctx.font = '16px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
+            ctx.fillStyle = '#6b7280';
+            ctx.fillText(bulletChar, bulletX, currentY);
+            
+            // Draw first line of text
+            ctx.font = '30px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
+            ctx.fillStyle = '#4b5563';
+            ctx.fillText(line, textStartX, currentY);
           } else {
-            // Wrapped lines double-indented, left-aligned
-            ctx.textAlign = 'left';
-            ctx.fillText(line, 140, currentY);
+            // Wrapped lines align with first line text
+            ctx.fillText(line, textStartX, currentY);
           }
-          currentY += 48;
+          currentY += 50;
         });
-        currentY += 15;
+        currentY += 18;
       });
     }
 
@@ -164,7 +180,7 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
       
       if (content.title) {
         ctx.textAlign = 'left';
-        ctx.font = 'bold 40px "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif';
+        ctx.font = 'bold 40px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
         ctx.fillStyle = '#1a1a1a';
         const titleLines = wrapText(content.title, CANVAS_SIZE - 120, 40);
         titleLines.forEach((line, i) => {
