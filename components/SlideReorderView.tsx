@@ -10,6 +10,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -55,7 +56,7 @@ function SortableSlide({ slide, index }: SortableSlideProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className="flex items-center gap-3 p-2 bg-white hover:bg-gray-50 rounded cursor-move"
+      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white hover:bg-gray-50 active:bg-gray-100 rounded cursor-move"
     >
       <span className="text-sm font-semibold text-gray-700 min-w-[3rem]">
         {index + 1}
@@ -79,7 +80,17 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
   const [slides, setSlides] = useState<Slide[]>([]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 0,
+        tolerance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -163,12 +174,12 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Re-order Slides</h2>
-            <p className="text-sm text-gray-600 mt-1">Drag slides to reorder them</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Re-order Slides</h2>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">Drag slides to reorder them</p>
           </div>
           <button
             onClick={onClose}
@@ -178,7 +189,7 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -197,7 +208,7 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
           </DndContext>
         </div>
 
-        <div className="flex gap-3 p-6 border-t border-gray-200">
+        <div className="flex gap-3 p-4 sm:p-6 border-t border-gray-200">
           <button
             onClick={handleSave}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
