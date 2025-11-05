@@ -19,6 +19,8 @@ export default function PlayPage() {
   const [loadedFromUrl, setLoadedFromUrl] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const mobileContainerRef = useRef<HTMLDivElement>(null);
+  const slideContainerRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -174,6 +176,57 @@ export default function PlayPage() {
     };
   }, [isMobileDragging]);
 
+  // Swipe gesture handlers for mobile navigation
+  useEffect(() => {
+    const slideContainer = slideContainerRef.current;
+    if (!slideContainer || !presentation) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        touchStartRef.current = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+        };
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!touchStartRef.current) return;
+
+      const touchEnd = e.changedTouches[0];
+      const deltaX = touchEnd.clientX - touchStartRef.current.x;
+      const deltaY = touchEnd.clientY - touchStartRef.current.y;
+      const absDeltaX = Math.abs(deltaX);
+      const absDeltaY = Math.abs(deltaY);
+
+      // Only handle horizontal swipes (ignore if vertical movement is greater)
+      if (absDeltaX > absDeltaY && absDeltaX > 50) {
+        // Minimum swipe distance of 50px
+        if (deltaX > 0) {
+          // Swipe right - go to previous slide
+          if (presentation.currentSlideIndex > 0) {
+            presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex - 1);
+          }
+        } else {
+          // Swipe left - go to next slide
+          if (presentation.currentSlideIndex < presentation.slides.length - 1) {
+            presentationHelpers.setCurrentSlideIndex(presentation.currentSlideIndex + 1);
+          }
+        }
+      }
+
+      touchStartRef.current = null;
+    };
+
+    slideContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+    slideContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      slideContainer.removeEventListener('touchstart', handleTouchStart);
+      slideContainer.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [presentation]);
+
   if (loadError) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -223,7 +276,10 @@ export default function PlayPage() {
           </button>
 
           {/* Square slide - takes most space */}
-          <div className="flex-1 flex items-center justify-center p-2 overflow-hidden">
+          <div 
+            ref={slideContainerRef}
+            className="flex-1 flex items-center justify-center p-2 overflow-hidden"
+          >
             <div className="max-w-full max-h-full aspect-square">
               {currentSlide && <SlideRenderer content={currentSlide.content} />}
             </div>
@@ -234,7 +290,7 @@ export default function PlayPage() {
             <button
               onClick={handlePrevious}
               disabled={presentation.currentSlideIndex === 0}
-              className="p-3 hover:bg-gray-100 rounded-full hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors active:scale-95"
+              className="p-3 rounded-full disabled:opacity-20 disabled:cursor-not-allowed transition-colors active:scale-95"
               aria-label="Previous slide"
             >
               <ChevronLeft className="w-6 h-6" />
@@ -247,7 +303,7 @@ export default function PlayPage() {
             <button
               onClick={handleNext}
               disabled={presentation.currentSlideIndex >= presentation.slides.length - 1}
-              className="p-3 hover:bg-gray-100 rounded-full hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors active:scale-95"
+              className="p-3 rounded-full disabled:opacity-20 disabled:cursor-not-allowed transition-colors active:scale-95"
               aria-label="Next slide"
             >
               <ChevronRight className="w-6 h-6" />
@@ -294,7 +350,7 @@ export default function PlayPage() {
               <button
                 onClick={handlePrevious}
                 disabled={presentation.currentSlideIndex === 0}
-                className="p-3 hover:bg-gray-100 rounded-full hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors active:scale-95"
+                className="p-3 rounded-full disabled:opacity-20 disabled:cursor-not-allowed transition-colors active:scale-95"
                 aria-label="Previous slide"
               >
                 <ChevronLeft className="w-6 h-6" />
@@ -307,7 +363,7 @@ export default function PlayPage() {
               <button
                 onClick={handleNext}
                 disabled={presentation.currentSlideIndex >= presentation.slides.length - 1}
-                className="p-3 hover:bg-gray-100 rounded-full hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors active:scale-95"
+                className="p-3 rounded-full disabled:opacity-20 disabled:cursor-not-allowed transition-colors active:scale-95"
                 aria-label="Next slide"
               >
                 <ChevronRight className="w-6 h-6" />
