@@ -50,6 +50,9 @@ function SortableSlide({ slide, index, onDuplicate, onDelete }: SortableSlidePro
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    touchAction: 'none' as const,
+    WebkitUserSelect: 'none' as const,
+    userSelect: 'none' as const,
   };
 
   const handleDuplicate = (e: React.MouseEvent) => {
@@ -69,21 +72,22 @@ function SortableSlide({ slide, index, onDuplicate, onDelete }: SortableSlidePro
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white hover:bg-gray-50 active:bg-gray-100 rounded"
+      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white hover:bg-gray-50 active:bg-gray-100 rounded select-none"
     >
       <div
         {...listeners}
-        className="flex items-center gap-2 sm:gap-3 flex-1 cursor-move"
+        className="flex items-center gap-2 sm:gap-3 flex-1 cursor-move select-none"
+        style={{ touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
       >
-        <span className="text-sm font-semibold text-gray-700 min-w-[3rem]">
+        <span className="text-sm font-semibold text-gray-700 min-w-[3rem] select-none">
           {index + 1}
         </span>
-        <div className="w-24 h-24 flex-shrink-0 pointer-events-none">
+        <div className="w-24 h-24 flex-shrink-0 pointer-events-none select-none">
           <div className="scale-[0.24] origin-top-left transform w-[416.67%] h-[416.67%]">
             <SlideRenderer content={slide.content} />
           </div>
         </div>
-        <div className="text-sm text-gray-600 truncate flex-1">
+        <div className="text-sm text-gray-600 truncate flex-1 select-none">
           {slide.content.type === 'title' && slide.content.title}
           {slide.content.type === 'bullets' && slide.content.title}
           {slide.content.type === 'quote' && (slide.content.title || slide.content.quote.substring(0, 50))}
@@ -112,6 +116,7 @@ function SortableSlide({ slide, index, onDuplicate, onDelete }: SortableSlidePro
 
 export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewProps) {
   const [slides, setSlides] = useState<Slide[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -122,7 +127,7 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
     useSensor(TouchSensor, {
       activationConstraint: {
         delay: 0,
-        tolerance: 8,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -135,6 +140,24 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
       loadSlides();
     }
   }, [isOpen]);
+
+  // Prevent text selection during drag
+  useEffect(() => {
+    if (isDragging) {
+      document.body.style.userSelect = 'none';
+      document.body.style.webkitUserSelect = 'none';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.userSelect = '';
+      document.body.style.webkitUserSelect = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.userSelect = '';
+      document.body.style.webkitUserSelect = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isDragging]);
 
   const loadSlides = () => {
     const keys = presentationCache.keys();
@@ -259,11 +282,16 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6" style={{ touchAction: 'pan-y' }}>
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={(event) => {
+              setIsDragging(false);
+              handleDragEnd(event);
+            }}
+            onDragCancel={() => setIsDragging(false)}
           >
             <SortableContext
               items={slides.map(s => s.id)}
