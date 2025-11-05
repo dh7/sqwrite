@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, CopyPlus, Trash2 } from 'lucide-react';
 import { presentationCache } from '@/lib/mindcache-store';
-import { Slide } from '@/lib/types';
+import { Slide, SlideContent } from '@/lib/types';
 import SlideRenderer from './SlideRenderer';
 import {
   DndContext,
@@ -32,9 +32,11 @@ interface SlideReorderViewProps {
 interface SortableSlideProps {
   slide: Slide;
   index: number;
+  onDuplicate: (index: number) => void;
+  onDelete: (slideId: string) => void;
 }
 
-function SortableSlide({ slide, index }: SortableSlideProps) {
+function SortableSlide({ slide, index, onDuplicate, onDelete }: SortableSlideProps) {
   const {
     attributes,
     listeners,
@@ -50,27 +52,59 @@ function SortableSlide({ slide, index }: SortableSlideProps) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDuplicate(index);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('Are you sure you want to delete this slide?')) {
+      onDelete(slide.id);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white hover:bg-gray-50 active:bg-gray-100 rounded cursor-move"
+      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white hover:bg-gray-50 active:bg-gray-100 rounded"
     >
-      <span className="text-sm font-semibold text-gray-700 min-w-[3rem]">
-        {index + 1}
-      </span>
-      <div className="w-24 h-24 flex-shrink-0 pointer-events-none">
-        <div className="scale-[0.24] origin-top-left transform w-[416.67%] h-[416.67%]">
-          <SlideRenderer content={slide.content} />
+      <div
+        {...listeners}
+        className="flex items-center gap-2 sm:gap-3 flex-1 cursor-move"
+      >
+        <span className="text-sm font-semibold text-gray-700 min-w-[3rem]">
+          {index + 1}
+        </span>
+        <div className="w-24 h-24 flex-shrink-0 pointer-events-none">
+          <div className="scale-[0.24] origin-top-left transform w-[416.67%] h-[416.67%]">
+            <SlideRenderer content={slide.content} />
+          </div>
+        </div>
+        <div className="text-sm text-gray-600 truncate flex-1">
+          {slide.content.type === 'title' && slide.content.title}
+          {slide.content.type === 'bullets' && slide.content.title}
+          {slide.content.type === 'quote' && (slide.content.title || slide.content.quote.substring(0, 50))}
+          {slide.content.type === 'image' && (slide.content.title || 'Image slide')}
         </div>
       </div>
-      <div className="text-sm text-gray-600 truncate flex-1">
-        {slide.content.type === 'title' && slide.content.title}
-        {slide.content.type === 'bullets' && slide.content.title}
-        {slide.content.type === 'quote' && (slide.content.title || slide.content.quote.substring(0, 50))}
-        {slide.content.type === 'image' && (slide.content.title || 'Image slide')}
+      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={handleDuplicate}
+          className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+          aria-label="Duplicate slide"
+        >
+          <CopyPlus className="w-4 h-4" />
+        </button>
+        <button
+          onClick={handleDelete}
+          className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+          aria-label="Delete slide"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
@@ -141,6 +175,39 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
     }
   };
 
+  const handleDuplicate = (index: number) => {
+    const slideToDuplicate = slides[index];
+    if (!slideToDuplicate) return;
+
+    // Deep copy the content
+    let contentCopy: SlideContent;
+    if (slideToDuplicate.content.type === 'bullets') {
+      contentCopy = {
+        ...slideToDuplicate.content,
+        bullets: [...slideToDuplicate.content.bullets],
+      };
+    } else {
+      contentCopy = { ...slideToDuplicate.content };
+    }
+
+    const duplicatedSlide: Slide = {
+      id: `slide-${Date.now()}`,
+      content: contentCopy,
+      speakerNotes: slideToDuplicate.speakerNotes,
+    };
+
+    // Insert after current index in local state
+    const newSlides = [...slides];
+    newSlides.splice(index + 1, 0, duplicatedSlide);
+    setSlides(newSlides);
+  };
+
+  const handleDelete = (slideId: string) => {
+    setSlides((currentSlides) => {
+      return currentSlides.filter(s => s.id !== slideId);
+    });
+  };
+
   const handleSave = () => {
     // Get current slide to maintain selection
     const currentSlide = presentationCache.get('Current_slide') as string || 'Slide_001';
@@ -163,9 +230,12 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
     });
 
     // Update current slide to maintain selection
-    if (currentSlideIndex >= 0) {
+    if (currentSlideIndex >= 0 && currentSlideIndex < slides.length) {
       const newSlideNum = String(currentSlideIndex + 1).padStart(3, '0');
       presentationCache.set('Current_slide', `Slide_${newSlideNum}`);
+    } else if (slides.length > 0) {
+      // If current slide was deleted, select first slide
+      presentationCache.set('Current_slide', 'Slide_001');
     }
 
     onClose();
@@ -201,7 +271,13 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
             >
               <div className="space-y-2">
                 {slides.map((slide, index) => (
-                  <SortableSlide key={slide.id} slide={slide} index={index} />
+                  <SortableSlide 
+                    key={slide.id} 
+                    slide={slide} 
+                    index={index}
+                    onDuplicate={handleDuplicate}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div>
             </SortableContext>
