@@ -138,11 +138,11 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
       });
       currentY += titleLines.length * 50 + 60;
 
-      ctx.font = '30px "Georgia", serif';
+      ctx.font = '26px "Georgia", serif';
       ctx.fillStyle = '#4b5563';
       
       content.bullets.forEach(bullet => {
-        const bulletLines = wrapText(bullet, CANVAS_SIZE - 120, 30);
+        const bulletLines = wrapText(bullet, CANVAS_SIZE - 120, 26);
         bulletLines.forEach((line, i) => {
           if (i === 0) {
             // First line aligned with title
