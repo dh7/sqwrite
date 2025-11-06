@@ -9,8 +9,56 @@ interface SlideRendererProps {
 
 const CANVAS_SIZE = 800; // Square canvas size
 
+// Calculate bounding box of all Excalidraw elements
+function calculateBounds(elements: any[]): { minX: number; minY: number; maxX: number; maxY: number; width: number; height: number } | null {
+  if (!elements || elements.length === 0) return null;
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  elements.forEach((element) => {
+    if (element.points && Array.isArray(element.points)) {
+      // For elements with points array (lines, arrows, etc.)
+      // Points is flat: [x1, y1, x2, y2, ...]
+      for (let i = 0; i < element.points.length; i += 2) {
+        const x = element.x + (element.points[i] || 0);
+        const y = element.y + (element.points[i + 1] || 0);
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    } else if (element.x !== undefined && element.y !== undefined) {
+      // For elements with x, y, width, height (rectangles, ellipses, text, etc.)
+      const x = element.x;
+      const y = element.y;
+      const width = element.width || 0;
+      const height = element.height || 0;
+      
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + width);
+      maxY = Math.max(maxY, y + height);
+    }
+  });
+
+  if (minX === Infinity) return null;
+
+  return {
+    minX,
+    minY,
+    maxX,
+    maxY,
+    width: maxX - minX,
+    height: maxY - minY,
+  };
+}
+
 export default function SlideRenderer({ content }: SlideRendererProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const currentImageUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -23,6 +71,12 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
+    // Revoke previous image URL to prevent caching
+    if (currentImageUrlRef.current) {
+      URL.revokeObjectURL(currentImageUrlRef.current);
+      currentImageUrlRef.current = null;
+    }
+
     // Handle drawing type - export Excalidraw to SVG and render on canvas
     if (content.type === 'drawing') {
       const renderDrawing = async () => {
@@ -32,26 +86,80 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
           const parsed = JSON.parse(content.drawingData);
           if (!parsed.elements || parsed.elements.length === 0) return;
 
-          // Dynamically import Excalidraw export function
-          const { exportToSvg } = await import('@excalidraw/excalidraw');
+          // Normalize appState to ensure proper structure while preserving all properties
+          const normalizedAppState = {
+            ...(parsed.appState || {}),
+            collaborators: Array.isArray(parsed.appState?.collaborators) 
+              ? parsed.appState.collaborators 
+              : [],
+            viewBackgroundColor: '#ffffff', // White background for canvas
+          };
+
+          // Ensure elements is an array and filter out deleted elements
+          const allElements = Array.isArray(parsed.elements) ? parsed.elements : [];
+          const elements = allElements.filter((el: any) => !el.isDeleted);
+
+          // Calculate bounding box of actual drawing content
+          const bounds = calculateBounds(elements);
           
-          // Export to SVG
-          const svg = await exportToSvg({
-            elements: parsed.elements,
+          // Normalize appState to focus viewport on actual content (remove whitespace)
+          let optimizedAppState = { ...normalizedAppState };
+          if (bounds && bounds.width > 0 && bounds.height > 0) {
+            // Calculate center of content
+            const centerX = bounds.minX + bounds.width / 2;
+            const centerY = bounds.minY + bounds.height / 2;
+            
+            // Calculate optimal zoom to fit content with minimal padding
+            // Use a standard viewport size (e.g., 2000x2000) to calculate zoom
+            const viewportPadding = 50;
+            const targetViewportWidth = bounds.width + viewportPadding * 2;
+            const targetViewportHeight = bounds.height + viewportPadding * 2;
+            
+            // Calculate zoom to fit content in viewport
+            const baseZoom = normalizedAppState.zoom?.value || 1;
+            const zoomX = (2000 / targetViewportWidth) * baseZoom;
+            const zoomY = (2000 / targetViewportHeight) * baseZoom;
+            const optimalZoom = Math.min(zoomX, zoomY);
+            
+            // Center viewport on content
+            optimizedAppState = {
+              ...normalizedAppState,
+              scrollX: -centerX,
+              scrollY: -centerY,
+              zoom: { value: optimalZoom as any },
+            };
+          }
+          
+          // Dynamically import Excalidraw export function
+          const { exportToBlob } = await import('@excalidraw/excalidraw');
+          
+          // Calculate export padding based on bounds
+          const exportPadding = bounds && bounds.width > 0 && bounds.height > 0 ? 20 : 10;
+          
+          // Export to PNG with normalized viewport
+          const blob = await exportToBlob({
+            elements: elements,
             appState: {
-              ...parsed.appState,
-              viewBackgroundColor: '#ffffff', // White background
+              ...optimizedAppState,
+              exportBackground: true,
+              exportWithDarkMode: false,
+              exportEmbedScene: false,
             },
+            mimeType: 'image/png',
+            quality: 1,
+            exportPadding: exportPadding,
             files: null,
           });
 
-          // Convert SVG to image and draw on canvas
-          const svgString = new XMLSerializer().serializeToString(svg);
-          const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-          const url = URL.createObjectURL(svgBlob);
+          const url = URL.createObjectURL(blob);
+          currentImageUrlRef.current = url;
 
           const img = new Image();
           img.onload = () => {
+            // Clear canvas again before drawing to ensure clean state
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            
             let currentY = 120;
             
             // Draw title if exists
@@ -83,13 +191,19 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
               titleLines.forEach((line, i) => {
                 ctx.fillText(line, 60, currentY + i * 50);
               });
-              currentY += titleLines.length * 50 + 60;
+              currentY += titleLines.length * 50 + 40; // Reduced spacing
+            } else {
+              // If no title, start drawing closer to top
+              currentY = 60;
             }
 
-            // Calculate available space and scale
-            const availableHeight = CANVAS_SIZE - currentY - 50;
-            const availableWidth = CANVAS_SIZE - 120;
+            // Calculate available space - use maximum space available
+            const availableHeight = CANVAS_SIZE - currentY - 20; // Minimal bottom padding
+            const availableWidth = CANVAS_SIZE - 40; // Minimal side padding for maximum space
             
+            // Calculate scale to maximize size
+            // PNG export with exportPadding should already be cropped to content bounds
+            // So we can use image dimensions directly, which should match content size
             const scale = Math.min(
               availableWidth / img.width,
               availableHeight / img.height
@@ -97,15 +211,19 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
             
             const width = img.width * scale;
             const height = img.height * scale;
-            const x = 60; // Align with title's left margin
+            
+            // Center the drawing horizontally and align to top
+            const x = (CANVAS_SIZE - width) / 2;
             const y = currentY;
             
             ctx.drawImage(img, x, y, width, height);
-            URL.revokeObjectURL(url);
           };
           img.onerror = () => {
-            console.error('Failed to load SVG image');
-            URL.revokeObjectURL(url);
+            console.error('Failed to load PNG image');
+            if (currentImageUrlRef.current) {
+              URL.revokeObjectURL(currentImageUrlRef.current);
+              currentImageUrlRef.current = null;
+            }
           };
           img.src = url;
         } catch (e) {
@@ -304,6 +422,14 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
       };
       img.src = content.imageUrl;
     }
+    
+    // Cleanup function to revoke URL when component unmounts or content changes
+    return () => {
+      if (currentImageUrlRef.current) {
+        URL.revokeObjectURL(currentImageUrlRef.current);
+        currentImageUrlRef.current = null;
+      }
+    };
   }, [content]);
 
   return (
