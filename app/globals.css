@@ -6,3 +6,35 @@ body {
   @apply bg-gray-50;
 }
 
+/* Hide Excalidraw UI elements in view-only mode */
+.excalidraw-view-only .ToolIcon,
+.excalidraw-view-only .Island,
+.excalidraw-view-only .layer-ui__wrapper__top-right,
+.excalidraw-view-only .layer-ui__wrapper__footer,
+.excalidraw-view-only .zen-mode-transition,
+.excalidraw-view-only .disable-zen-mode,
+.excalidraw-view-only .sidebar,
+.excalidraw-view-only .help-icon,
+.excalidraw-view-only .menu-button,
+.excalidraw-view-only .App-menu,
+.excalidraw-view-only .App-toolbar,
+.excalidraw-view-only .Toolbar,
+.excalidraw-view-only .context-menu-option,
+.excalidraw-view-only .context-menu,
+.excalidraw-view-only button[title],
+.excalidraw-view-only [data-testid="clear-canvas-button"],
+.excalidraw-view-only [data-testid="save-button"],
+.excalidraw-view-only [data-testid="load-button"],
+.excalidraw-view-only [data-testid="export-button"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Ensure Excalidraw canvas is centered */
+.excalidraw-view-only .excalidraw-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+

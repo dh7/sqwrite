@@ -23,6 +23,100 @@ export default function SlideRenderer({ content }: SlideRendererProps) {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
+    // Handle drawing type - export Excalidraw to SVG and render on canvas
+    if (content.type === 'drawing') {
+      const renderDrawing = async () => {
+        try {
+          if (!content.drawingData) return;
+          
+          const parsed = JSON.parse(content.drawingData);
+          if (!parsed.elements || parsed.elements.length === 0) return;
+
+          // Dynamically import Excalidraw export function
+          const { exportToSvg } = await import('@excalidraw/excalidraw');
+          
+          // Export to SVG
+          const svg = await exportToSvg({
+            elements: parsed.elements,
+            appState: {
+              ...parsed.appState,
+              viewBackgroundColor: '#ffffff', // White background
+            },
+            files: null,
+          });
+
+          // Convert SVG to image and draw on canvas
+          const svgString = new XMLSerializer().serializeToString(svg);
+          const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(svgBlob);
+
+          const img = new Image();
+          img.onload = () => {
+            let currentY = 120;
+            
+            // Draw title if exists
+            if (content.title) {
+              ctx.textAlign = 'left';
+              ctx.font = 'bold 40px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif';
+              ctx.fillStyle = '#1a1a1a';
+              
+              const wrapText = (text: string, maxWidth: number, fontSize: number): string[] => {
+                ctx.font = `${fontSize}px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif`;
+                const words = text.split(' ');
+                const lines: string[] = [];
+                let currentLine = '';
+                for (const word of words) {
+                  const testLine = currentLine + (currentLine ? ' ' : '') + word;
+                  const metrics = ctx.measureText(testLine);
+                  if (metrics.width > maxWidth && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                  } else {
+                    currentLine = testLine;
+                  }
+                }
+                if (currentLine) lines.push(currentLine);
+                return lines;
+              };
+              
+              const titleLines = wrapText(content.title, CANVAS_SIZE - 120, 40);
+              titleLines.forEach((line, i) => {
+                ctx.fillText(line, 60, currentY + i * 50);
+              });
+              currentY += titleLines.length * 50 + 60;
+            }
+
+            // Calculate available space and scale
+            const availableHeight = CANVAS_SIZE - currentY - 50;
+            const availableWidth = CANVAS_SIZE - 120;
+            
+            const scale = Math.min(
+              availableWidth / img.width,
+              availableHeight / img.height
+            );
+            
+            const width = img.width * scale;
+            const height = img.height * scale;
+            const x = 60; // Align with title's left margin
+            const y = currentY;
+            
+            ctx.drawImage(img, x, y, width, height);
+            URL.revokeObjectURL(url);
+          };
+          img.onerror = () => {
+            console.error('Failed to load SVG image');
+            URL.revokeObjectURL(url);
+          };
+          img.src = url;
+        } catch (e) {
+          console.error('Failed to render Excalidraw drawing:', e);
+        }
+      };
+
+      renderDrawing();
+      return;
+    }
+
     // Helper function to wrap text
     const wrapText = (text: string, maxWidth: number, fontSize: number): string[] => {
       ctx.font = `${fontSize}px "Georgia", "Baskerville", "Palatino", "Times New Roman", serif`;

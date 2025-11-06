@@ -1,8 +1,15 @@
 "use client";
 
-import { SlideContent, TitleContent, QuoteContent, BulletsContent, ImageContent } from '@/lib/types';
-import { useState, useRef } from 'react';
+import { SlideContent, TitleContent, QuoteContent, BulletsContent, ImageContent, DrawingContent } from '@/lib/types';
+import { useState, useRef, useEffect } from 'react';
 import { Upload } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import '@excalidraw/excalidraw/index.css';
+
+const Excalidraw = dynamic(
+  async () => (await import('@excalidraw/excalidraw')).Excalidraw,
+  { ssr: false }
+);
 
 interface SlideEditorProps {
   content: SlideContent;
@@ -11,7 +18,7 @@ interface SlideEditorProps {
 }
 
 export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorProps) {
-  const [currentType, setCurrentType] = useState<'title' | 'quote' | 'bullets' | 'image'>(content.type);
+  const [currentType, setCurrentType] = useState<'title' | 'quote' | 'bullets' | 'image' | 'drawing'>(content.type);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Store all content types separately to preserve when switching
@@ -33,10 +40,22 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
     alt: content.type === 'image' ? content.alt || '' : '',
   });
 
+  const [drawingData, setDrawingData] = useState<string>(
+    content.type === 'drawing' ? content.drawingData : '{"elements":[],"appState":{}}'
+  );
+
+  // Update drawingData when content changes (only if different to avoid interrupting drawing)
+  useEffect(() => {
+    if (content.type === 'drawing' && content.drawingData !== drawingData) {
+      setDrawingData(content.drawingData);
+    }
+  }, [content.type === 'drawing' ? content.drawingData : null]);
+
   const [title, setTitle] = useState<string>(() => {
     if (content.type === 'title') return content.title;
     if (content.type === 'bullets') return content.title;
     if (content.type === 'quote') return content.title || '';
+    if (content.type === 'drawing') return content.title || '';
     return content.title || '';
   });
 
@@ -72,12 +91,36 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
         quote: quoteData.quote,
         author: quoteData.author,
       };
-    } else {
+    } else if (currentType === 'image') {
       finalContent = {
         type: 'image',
         title: title,
         imageUrl: imageData.imageUrl,
         alt: imageData.alt,
+      };
+    } else {
+      // Normalize appState when saving to ensure collaborators is always an array
+      let normalizedDrawingData = drawingData;
+      try {
+        const parsed = JSON.parse(drawingData);
+        if (parsed.appState) {
+          parsed.appState = {
+            ...parsed.appState,
+            collaborators: Array.isArray(parsed.appState.collaborators) 
+              ? parsed.appState.collaborators 
+              : [],
+          };
+          normalizedDrawingData = JSON.stringify(parsed);
+        }
+      } catch (e) {
+        // If parsing fails, use original data
+        console.error('Failed to normalize drawing data:', e);
+      }
+      
+      finalContent = {
+        type: 'drawing',
+        title: title,
+        drawingData: normalizedDrawingData,
       };
     }
     
@@ -85,7 +128,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
     onClose();
   };
 
-  const handleTypeChange = (newType: 'title' | 'quote' | 'bullets' | 'image') => {
+  const handleTypeChange = (newType: 'title' | 'quote' | 'bullets' | 'image' | 'drawing') => {
     setCurrentType(newType);
   };
 
@@ -169,6 +212,17 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
               }`}
             >
               Image
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTypeChange('drawing')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                currentType === 'drawing'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Drawing
             </button>
           </div>
         </div>
@@ -325,6 +379,53 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
                 className="w-full p-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Description of the image..."
               />
+            </div>
+          </div>
+        )}
+
+        {currentType === 'drawing' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Draw your content
+              </label>
+              <div className="w-[min(100%,100vh)] aspect-square mx-auto border border-gray-300 rounded-lg overflow-hidden flex flex-col shadow-lg">
+                <div className="flex-1">
+                  <Excalidraw
+                    onChange={(elements, appState) => {
+                      // Save raw data - only normalize on save
+                      const data = JSON.stringify({
+                        elements,
+                        appState,
+                      });
+                      setDrawingData(data);
+                    }}
+                    initialData={(() => {
+                      try {
+                        const parsed = JSON.parse(drawingData);
+                        // Ensure appState has required structure while preserving all other properties
+                        if (parsed.appState) {
+                          parsed.appState = {
+                            ...parsed.appState,
+                            collaborators: Array.isArray(parsed.appState.collaborators) 
+                              ? parsed.appState.collaborators 
+                              : [],
+                          };
+                        } else {
+                          parsed.appState = { collaborators: [] };
+                        }
+                        // Ensure elements is an array
+                        if (!Array.isArray(parsed.elements)) {
+                          parsed.elements = [];
+                        }
+                        return parsed;
+                      } catch {
+                        return { elements: [], appState: { collaborators: [] } };
+                      }
+                    })()}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}
