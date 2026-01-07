@@ -25,7 +25,7 @@ function DrawingPreview({ drawingData, title }: { drawingData: string; title: st
   if (!drawingData || drawingData === '{"elements":[],"appState":{}}') {
     return (
       <div className="border border-gray-300 rounded-lg p-8 bg-gray-50 text-center text-gray-500">
-        No drawing yet. Click "Draw" to create a drawing or "Import Excalidraw" to load one.
+        No drawing yet. Click &quot;Draw&quot; to create a drawing or &quot;Import Excalidraw&quot; to load one.
       </div>
     );
   }
@@ -79,7 +79,7 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
     if (content.type === 'drawing' && content.drawingData !== drawingData) {
       setDrawingData(content.drawingData);
     }
-  }, [content.type === 'drawing' ? content.drawingData : null]);
+  }, [content.type, content.drawingData, drawingData]);
 
   const [title, setTitle] = useState<string>(() => {
     if (content.type === 'title') return content.title;
