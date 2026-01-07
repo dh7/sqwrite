@@ -2,6 +2,18 @@
 
 A React/Next.js application for creating beautiful square presentations with AI assistance.
 
+## Why This Project?
+
+SqWrite is a UX exploration about integrating a chatbot within a simple application. In this case, the app is a tool for creating and presenting slides.
+
+The project explores how a chatbot can enhance user experience when deeply integrated into an application's workflow:
+
+- **During Creation**: The chatbot acts as a creative partner, helping users brainstorm, write content, and refine their presentations. It has full context of the presentation and can directly modify slides and speaker notes.
+
+- **During Presentation**: The chatbot becomes an interactive Q&A companion, allowing audiences to ask questions about the content being presented, creating a more engaging and accessible presentation experience.
+
+This exploration demonstrates how chatbots can move beyond simple Q&A interfaces to become integral parts of application workflows, providing contextual assistance that adapts to different modes of use.
+
 ## Features
 
 - **Square Presentation Format**: Create visually appealing square slides
