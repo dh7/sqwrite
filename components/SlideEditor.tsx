@@ -11,7 +11,6 @@ const Excalidraw = dynamic(
   { ssr: false }
 );
 
-import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types';
 import SlideRenderer from './SlideRenderer';
 
 interface SlideEditorProps {
@@ -75,11 +74,12 @@ export default function SlideEditor({ content, onUpdate, onClose }: SlideEditorP
   );
 
   // Update drawingData when content changes (only if different to avoid interrupting drawing)
+  const contentDrawingData = content.type === 'drawing' ? content.drawingData : null;
   useEffect(() => {
-    if (content.type === 'drawing' && content.drawingData !== drawingData) {
-      setDrawingData(content.drawingData);
+    if (content.type === 'drawing' && contentDrawingData !== null && contentDrawingData !== drawingData) {
+      setDrawingData(contentDrawingData);
     }
-  }, [content.type, content.drawingData, drawingData]);
+  }, [content.type, contentDrawingData, drawingData]);
 
   const [title, setTitle] = useState<string>(() => {
     if (content.type === 'title') return content.title;
