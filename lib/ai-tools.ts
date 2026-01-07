@@ -61,7 +61,7 @@ export const createMindCacheTools = () => {
     }),
     
     addSlide: tool({
-      description: 'Add a new slide to the presentation',
+      description: 'Add a new slide to the presentation. IMPORTANT: After adding a slide, you should immediately call setCurrentSlide to navigate to the newly created slide so the user can see it.',
       parameters: z.object({
         content: z.object({
           type: z.enum(['title', 'quote', 'bullets', 'image', 'drawing']).describe('Type of slide content'),
@@ -83,6 +83,22 @@ export const createMindCacheTools = () => {
           message: 'Slide added',
           action: 'add_slide',
           data: { content, notes }
+        };
+      },
+    }),
+
+    setCurrentSlide: tool({
+      description: 'Navigate to a specific slide by setting it as the current slide. Use this after creating a new slide to show it to the user, or to navigate to any existing slide.',
+      parameters: z.object({
+        slideNumber: z.number().describe('The slide number to navigate to (1-based index)'),
+      }),
+      execute: async ({ slideNumber }) => {
+        // Server just validates and returns - client applies the change
+        return { 
+          success: true, 
+          message: `Navigated to slide ${slideNumber}`,
+          action: 'set_current_slide',
+          data: { slideNumber }
         };
       },
     }),

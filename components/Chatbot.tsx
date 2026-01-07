@@ -4,7 +4,7 @@ import { useChat } from 'ai/react';
 import { Send } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
-import { presentationCache } from '@/lib/mindcache-store';
+import { presentationCache, presentationHelpers } from '@/lib/mindcache-store';
 
 export default function Chatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -44,6 +44,12 @@ export default function Chatbot() {
         
         presentationCache.set(`Slide_${slideNum}_content`, args.content);
         presentationCache.set(`Slide_${slideNum}_notes`, args.notes || '');
+        
+        // Automatically navigate to the newly created slide
+        presentationHelpers.setCurrentSlideIndex(nextNum - 1);
+      } else if (toolCall.toolName === 'setCurrentSlide') {
+        // Navigate to the specified slide (0-based index)
+        presentationHelpers.setCurrentSlideIndex(args.slideNumber - 1);
       }
     },
   });
@@ -61,7 +67,7 @@ export default function Chatbot() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 mt-4 sm:mt-8">
-            <p className="text-sm sm:text-base">Hi! I'm here to help you create an amazing presentation.</p>
+            <p className="text-sm sm:text-base">Hi! I&apos;m here to help you create an amazing presentation.</p>
             <p className="text-xs sm:text-sm mt-2">I can help with:</p>
             <ul className="text-xs sm:text-sm text-left max-w-xs mx-auto mt-2 space-y-1 px-4">
               <li>• Brainstorming ideas and structure</li>
