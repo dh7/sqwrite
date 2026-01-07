@@ -165,23 +165,50 @@ export const presentationHelpers = {
   },
 };
 
-// Initialize from cookies or create new presentation
+// Initialize from localStorage (or cookies as fallback) or create new presentation
 if (typeof window !== 'undefined') {
-  // Try to load from cookies first
-  const cookies = document.cookie.split(';');
-  const sqwriteCookie = cookies.find(c => c.trim().startsWith('sqwrite_presentation='));
+  let loaded = false;
   
-  if (sqwriteCookie) {
-    try {
-      const cookieData = decodeURIComponent(sqwriteCookie.split('=')[1]);
-      const parsedData = JSON.parse(cookieData);
-      presentationCache.update(parsedData);
-    } catch (error) {
-      console.error('Failed to load from cookies:', error);
+  // Try to load from localStorage first (supports much larger data)
+  try {
+    const storedData = localStorage.getItem('sqwrite_presentation');
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        presentationCache.update(parsedData);
+        loaded = true;
+      } catch (error) {
+        console.error('Failed to parse localStorage data:', error);
+      }
+    }
+  } catch (e) {
+    console.warn('localStorage not available, trying cookies:', e);
+  }
+  
+  // Fallback to cookies if localStorage didn't work
+  if (!loaded) {
+    const cookies = document.cookie.split(';');
+    const sqwriteCookie = cookies.find(c => c.trim().startsWith('sqwrite_presentation='));
+    
+    if (sqwriteCookie) {
+      try {
+        const cookieData = decodeURIComponent(sqwriteCookie.split('=')[1]);
+        const parsedData = JSON.parse(cookieData);
+        presentationCache.update(parsedData);
+        loaded = true;
+        // Migrate to localStorage if we successfully loaded from cookies
+        try {
+          localStorage.setItem('sqwrite_presentation', JSON.stringify(parsedData));
+        } catch (e) {
+          console.warn('Failed to migrate cookie data to localStorage:', e);
+        }
+      } catch (error) {
+        console.error('Failed to load from cookies:', error);
+      }
     }
   }
   
-  // If no cookie data or import failed, initialize with default
+  // If no stored data or import failed, initialize with default
   const existing = presentationCache.get('Presentation_Name');
   if (!existing) {
     // Initialize with proper MindCache keys

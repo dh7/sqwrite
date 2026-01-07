@@ -92,6 +92,7 @@ function SortableSlide({ slide, index, onDuplicate, onDelete }: SortableSlidePro
           {slide.content.type === 'bullets' && slide.content.title}
           {slide.content.type === 'quote' && (slide.content.title || slide.content.quote.substring(0, 50))}
           {slide.content.type === 'image' && (slide.content.title || 'Image slide')}
+          {slide.content.type === 'drawing' && (slide.content.title || 'Drawing slide')}
         </div>
       </div>
       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -208,6 +209,11 @@ export default function SlideReorderView({ isOpen, onClose }: SlideReorderViewPr
       contentCopy = {
         ...slideToDuplicate.content,
         bullets: [...slideToDuplicate.content.bullets],
+      };
+    } else if (slideToDuplicate.content.type === 'drawing') {
+      contentCopy = {
+        ...slideToDuplicate.content,
+        drawingData: slideToDuplicate.content.drawingData, // Copy drawing data
       };
     } else {
       contentCopy = { ...slideToDuplicate.content };

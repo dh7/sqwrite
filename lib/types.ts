@@ -1,4 +1,4 @@
-export type SlideType = 'title' | 'quote' | 'bullets' | 'image';
+export type SlideType = 'title' | 'quote' | 'bullets' | 'image' | 'drawing';
 
 export interface TitleContent {
   type: 'title';
@@ -26,7 +26,13 @@ export interface ImageContent {
   alt?: string;
 }
 
-export type SlideContent = TitleContent | QuoteContent | BulletsContent | ImageContent;
+export interface DrawingContent {
+  type: 'drawing';
+  title?: string;
+  drawingData: string; // JSON string of Excalidraw elements
+}
+
+export type SlideContent = TitleContent | QuoteContent | BulletsContent | ImageContent | DrawingContent;
 
 export interface Slide {
   id: string;

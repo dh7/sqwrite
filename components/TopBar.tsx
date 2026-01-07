@@ -15,19 +15,29 @@ export default function TopBar({ presentationName, onNameChange, onReorder }: To
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  // Save to cookies whenever MindCache changes
+  // Save to localStorage whenever MindCache changes (localStorage has much larger capacity than cookies)
   useEffect(() => {
-    const saveToCookies = () => {
+    const saveToStorage = () => {
       const stmData = JSON.stringify(presentationCache.getAll());
-      if (typeof document !== 'undefined') {
-        document.cookie = `sqwrite_presentation=${encodeURIComponent(stmData)}; max-age=${60 * 60 * 24 * 365}; path=/`;
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('sqwrite_presentation', stmData);
+        } catch (e) {
+          // If localStorage is full or unavailable, try cookies as fallback (may truncate large data)
+          console.warn('localStorage failed, falling back to cookies:', e);
+          try {
+            document.cookie = `sqwrite_presentation=${encodeURIComponent(stmData)}; max-age=${60 * 60 * 24 * 365}; path=/`;
+          } catch (cookieError) {
+            console.error('Failed to save to both localStorage and cookies:', cookieError);
+          }
+        }
       }
     };
 
-    presentationCache.subscribeToAll(saveToCookies);
+    presentationCache.subscribeToAll(saveToStorage);
     
     return () => {
-      presentationCache.unsubscribeFromAll(saveToCookies);
+      presentationCache.unsubscribeFromAll(saveToStorage);
     };
   }, []);
 

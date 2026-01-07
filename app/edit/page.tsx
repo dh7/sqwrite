@@ -89,6 +89,11 @@ export default function EditPage() {
           ...currentSlide.content,
           bullets: [...currentSlide.content.bullets],
         };
+      } else if (currentSlide.content.type === 'drawing') {
+        contentCopy = {
+          ...currentSlide.content,
+          drawingData: currentSlide.content.drawingData, // Copy drawing data
+        };
       } else {
         contentCopy = { ...currentSlide.content };
       }

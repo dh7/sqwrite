@@ -21,7 +21,7 @@ export const createMindCacheTools = () => {
       parameters: z.object({
         slideNumber: z.number().describe('The slide number (1-based index)'),
         content: z.object({
-          type: z.enum(['title', 'quote', 'bullets', 'image']).describe('Type of slide content'),
+          type: z.enum(['title', 'quote', 'bullets', 'image', 'drawing']).describe('Type of slide content'),
           title: z.string().optional().describe('Title for all slide types'),
           subtitle: z.string().optional().describe('Subtitle for title slides'),
           quote: z.string().optional().describe('Quote text for quote slides'),
@@ -29,6 +29,7 @@ export const createMindCacheTools = () => {
           bullets: z.array(z.string()).optional().describe('Bullet points for bullet slides'),
           imageUrl: z.string().optional().describe('Image URL for image slides'),
           alt: z.string().optional().describe('Alt text for image slides'),
+          drawingData: z.string().optional().describe('JSON string of Excalidraw elements and appState for drawing slides'),
         }),
       }),
       execute: async ({ slideNumber, content }) => {
@@ -63,7 +64,7 @@ export const createMindCacheTools = () => {
       description: 'Add a new slide to the presentation',
       parameters: z.object({
         content: z.object({
-          type: z.enum(['title', 'quote', 'bullets', 'image']).describe('Type of slide content'),
+          type: z.enum(['title', 'quote', 'bullets', 'image', 'drawing']).describe('Type of slide content'),
           title: z.string().optional().describe('Title for all slide types'),
           subtitle: z.string().optional().describe('Subtitle for title slides'),
           quote: z.string().optional(),
@@ -71,6 +72,7 @@ export const createMindCacheTools = () => {
           bullets: z.array(z.string()).optional(),
           imageUrl: z.string().optional(),
           alt: z.string().optional(),
+          drawingData: z.string().optional().describe('JSON string of Excalidraw elements and appState for drawing slides'),
         }),
         notes: z.string().default('').describe('Speaker notes for the new slide'),
       }),
