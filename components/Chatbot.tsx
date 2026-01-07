@@ -4,7 +4,7 @@ import { useChat } from 'ai/react';
 import { Send } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
-import { presentationCache } from '@/lib/mindcache-store';
+import { presentationCache, presentationHelpers } from '@/lib/mindcache-store';
 
 export default function Chatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -44,6 +44,12 @@ export default function Chatbot() {
         
         presentationCache.set(`Slide_${slideNum}_content`, args.content);
         presentationCache.set(`Slide_${slideNum}_notes`, args.notes || '');
+        
+        // Automatically navigate to the newly created slide
+        presentationHelpers.setCurrentSlideIndex(nextNum - 1);
+      } else if (toolCall.toolName === 'setCurrentSlide') {
+        // Navigate to the specified slide (0-based index)
+        presentationHelpers.setCurrentSlideIndex(args.slideNumber - 1);
       }
     },
   });
