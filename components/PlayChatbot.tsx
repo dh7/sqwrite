@@ -4,6 +4,7 @@ import { useChat } from 'ai/react';
 import { Send } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { presentationCache } from '@/lib/mindcache-store';
+import { trackEvent } from '@/lib/sessionTracking';
 
 export default function PlayChatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -14,6 +15,9 @@ export default function PlayChatbot() {
       mindcacheData: typeof window !== 'undefined' 
         ? presentationCache.getAll()
         : null,
+    },
+    onFinish: (message) => {
+      trackEvent('chat_answer', { answer: message.content.slice(0, 200), path: '/play' });
     },
   });
 
@@ -70,7 +74,10 @@ export default function PlayChatbot() {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="p-3 border-t border-gray-200">
+      <form onSubmit={(e) => {
+          trackEvent('chat_message', { content: input.slice(0, 200), path: '/play' });
+          handleSubmit(e);
+        }} className="p-3 border-t border-gray-200">
         <div className="flex gap-2">
           <input
             type="text"

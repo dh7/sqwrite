@@ -5,6 +5,7 @@ import { Send } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 import { presentationCache, presentationHelpers } from '@/lib/mindcache-store';
+import { trackEvent } from '@/lib/sessionTracking';
 
 export default function Chatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -16,6 +17,10 @@ export default function Chatbot() {
       mindcacheData: typeof window !== 'undefined' 
         ? presentationCache.getAll()
         : null,
+    },
+    onFinish: (message) => {
+      // Track AI response
+      trackEvent('chat_answer', { answer: message.content.slice(0, 200), path: '/edit' });
     },
     onToolCall: ({ toolCall }) => {
       // When AI calls a tool, apply the changes to client MindCache
@@ -116,7 +121,10 @@ export default function Chatbot() {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
+      <form onSubmit={(e) => {
+          trackEvent('chat_message', { content: input.slice(0, 200), path: '/edit' });
+          handleSubmit(e);
+        }} className="p-4 border-t border-gray-200">
         <div className="flex gap-2">
               <input
                 type="text"

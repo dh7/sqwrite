@@ -45,9 +45,10 @@ export async function trackPageView(path: string, title?: string) {
   if (window.location.hostname === 'localhost') return; // Skip in dev
   
   const sessionId = getSessionId();
+  console.log('[tracking] sending page view:', path, sessionId);
   
   try {
-    await fetch(TRACKING_ENDPOINT, {
+    const res = await fetch(TRACKING_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -59,8 +60,10 @@ export async function trackPageView(path: string, title?: string) {
         prefix: APP_PREFIX
       })
     });
+    const data = await res.json();
+    console.log('[tracking] response:', data);
   } catch (error) {
-    console.error('Failed to track page view:', error);
+    console.error('[tracking] Failed to track page view:', error);
   }
 }
 
