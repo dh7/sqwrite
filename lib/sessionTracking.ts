@@ -42,7 +42,6 @@ function setCookie(name: string, value: string, days: number) {
 
 export async function trackPageView(path: string, title?: string) {
   if (typeof window === 'undefined') return;
-  if (window.location.hostname === 'localhost') return; // Skip in dev
   
   const sessionId = getSessionId();
   console.log('[tracking] sending page view:', path, sessionId);
@@ -69,7 +68,6 @@ export async function trackPageView(path: string, title?: string) {
 
 export async function trackEvent(eventType: string, data: Record<string, unknown>) {
   if (typeof window === 'undefined') return;
-  if (window.location.hostname === 'localhost') return; // Skip in dev
   
   const sessionId = getSessionId();
   

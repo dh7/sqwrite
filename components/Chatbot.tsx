@@ -122,8 +122,9 @@ export default function Chatbot() {
       </div>
 
       <form onSubmit={(e) => {
-          trackEvent('chat_message', { content: input.slice(0, 200), path: '/edit' });
+          const message = input.slice(0, 200);
           handleSubmit(e);
+          trackEvent('chat_message', { content: message, path: '/edit' });
         }} className="p-4 border-t border-gray-200">
         <div className="flex gap-2">
               <input

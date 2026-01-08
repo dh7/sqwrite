@@ -75,8 +75,9 @@ export default function PlayChatbot() {
       </div>
 
       <form onSubmit={(e) => {
-          trackEvent('chat_message', { content: input.slice(0, 200), path: '/play' });
+          const message = input.slice(0, 200);
           handleSubmit(e);
+          trackEvent('chat_message', { content: message, path: '/play' });
         }} className="p-3 border-t border-gray-200">
         <div className="flex gap-2">
           <input
