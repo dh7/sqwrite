@@ -1,5 +1,9 @@
-import { google } from '@ai-sdk/google';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { streamText } from 'ai';
+
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
 
 export const runtime = 'edge';
 
@@ -14,7 +18,7 @@ export async function POST(req: Request) {
     : '';
 
   const result = await streamText({
-    model: google('gemini-2.5-flash'),
+    model: openrouter('anthropic/claude-sonnet-4'),
     messages,
     system: `You are a helpful AI assistant helping an audience member understand a presentation.
 
