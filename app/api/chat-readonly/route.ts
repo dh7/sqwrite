@@ -7,7 +7,14 @@ const openrouter = createOpenRouter({
 
 export const runtime = 'edge';
 
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:3000', 'http://localhost:3001'];
+
 export async function POST(req: Request) {
+  const origin = req.headers.get('origin') ?? req.headers.get('referer') ?? '';
+  if (!ALLOWED_ORIGINS.some((o) => origin.startsWith(o))) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
   const { messages, mindcacheData } = await req.json();
 
   // Build STM prompt from MindCache data
