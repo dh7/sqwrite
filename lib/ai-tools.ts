@@ -102,6 +102,53 @@ export const createMindCacheTools = () => {
         };
       },
     }),
+
+    scrapeWebsite: tool({
+      description: 'Fetch and extract text content from a URL. Use this when the user provides a link and wants to create slides based on that webpage content. Returns the page title and text.',
+      inputSchema: z.object({
+        url: z.string().url().describe('The URL to scrape'),
+      }),
+      execute: async ({ url }) => {
+        try {
+          const response = await fetch(url, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SqWriteBot/1.0)' },
+            signal: AbortSignal.timeout(10000),
+          });
+
+          if (!response.ok) {
+            return { success: false, error: `Failed to fetch: ${response.status} ${response.statusText}` };
+          }
+
+          const html = await response.text();
+
+          // Extract title
+          const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+          const title = titleMatch ? titleMatch[1].trim().replace(/\s+/g, ' ') : '';
+
+          // Strip scripts, styles, and HTML tags to get text
+          const text = html
+            .replace(/<script[\s\S]*?<\/script>/gi, '')
+            .replace(/<style[\s\S]*?<\/style>/gi, '')
+            .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+            .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+            .replace(/<header[\s\S]*?<\/header>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 8000);
+
+          return { success: true, url, title, text };
+        } catch (err: any) {
+          return { success: false, error: err.message || 'Failed to scrape URL' };
+        }
+      },
+    }),
   };
 };
 
