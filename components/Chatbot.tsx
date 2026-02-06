@@ -1,63 +1,88 @@
 "use client";
 
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport, isToolUIPart, getToolName } from 'ai';
 import { Send } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 
 import { presentationCache, presentationHelpers } from '@/lib/mindcache-store';
 import { trackEvent } from '@/lib/sessionTracking';
 
+function getMessageText(message: { parts: Array<{ type: string; text?: string }> }): string {
+  return message.parts
+    .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+    .map((p) => p.text)
+    .join('');
+}
+
+function applyToolResult(toolName: string, result: any) {
+  if (!result?.data) return;
+  const data = result.data;
+
+  if (toolName === 'updatePresentationTitle') {
+    presentationCache.set('Presentation_Name', data.title);
+  } else if (toolName === 'updateSlideContent') {
+    const slideNum = String(data.slideNumber).padStart(3, '0');
+    presentationCache.set(`Slide_${slideNum}_content`, data.content);
+  } else if (toolName === 'updateSpeakerNotes') {
+    const slideNum = String(data.slideNumber).padStart(3, '0');
+    presentationCache.set(`Slide_${slideNum}_notes`, data.notes);
+  } else if (toolName === 'addSlide') {
+    const keys = presentationCache.keys();
+    const slideNums = keys
+      .filter(k => k.match(/^Slide_\d{3}_content$/))
+      .map(k => parseInt(k.match(/Slide_(\d{3})_content/)?.[1] || '0'))
+      .filter(n => !isNaN(n));
+
+    const nextNum = slideNums.length > 0 ? Math.max(...slideNums) + 1 : 1;
+    const slideNum = String(nextNum).padStart(3, '0');
+
+    presentationCache.set(`Slide_${slideNum}_content`, data.content);
+    presentationCache.set(`Slide_${slideNum}_notes`, data.notes || '');
+    presentationHelpers.setCurrentSlideIndex(nextNum - 1);
+  } else if (toolName === 'setCurrentSlide') {
+    presentationHelpers.setCurrentSlideIndex(data.slideNumber - 1);
+  }
+}
+
 export default function Chatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const [input, setInput] = useState('');
+  const processedToolCalls = useRef(new Set<string>());
+
+  const transport = useMemo(() => new DefaultChatTransport({
     api: '/api/chat',
-    body: {
-      // Send all MindCache data with each request
-      mindcacheData: typeof window !== 'undefined' 
-        ? presentationCache.getAll()
-        : null,
-    },
-    onFinish: (message) => {
-      // Track AI response
-      trackEvent('chat_answer', { answer: message.content.slice(0, 200), path: '/edit' });
-    },
-    onToolCall: ({ toolCall }) => {
-      // When AI calls a tool, apply the changes to client MindCache
-      console.log('Tool called:', toolCall.toolName, toolCall.args);
-      
-      const args = toolCall.args as any;
-      
-      if (toolCall.toolName === 'updatePresentationTitle') {
-        presentationCache.set('Presentation_Name', args.title);
-      } else if (toolCall.toolName === 'updateSlideContent') {
-        const slideNum = String(args.slideNumber).padStart(3, '0');
-        presentationCache.set(`Slide_${slideNum}_content`, args.content);
-      } else if (toolCall.toolName === 'updateSpeakerNotes') {
-        const slideNum = String(args.slideNumber).padStart(3, '0');
-        presentationCache.set(`Slide_${slideNum}_notes`, args.notes);
-      } else if (toolCall.toolName === 'addSlide') {
-        // Find the next slide number
-        const keys = presentationCache.keys();
-        const slideNums = keys
-          .filter(k => k.match(/^Slide_\d{3}_content$/))
-          .map(k => parseInt(k.match(/Slide_(\d{3})_content/)?.[1] || '0'))
-          .filter(n => !isNaN(n));
-        
-        const nextNum = slideNums.length > 0 ? Math.max(...slideNums) + 1 : 1;
-        const slideNum = String(nextNum).padStart(3, '0');
-        
-        presentationCache.set(`Slide_${slideNum}_content`, args.content);
-        presentationCache.set(`Slide_${slideNum}_notes`, args.notes || '');
-        
-        // Automatically navigate to the newly created slide
-        presentationHelpers.setCurrentSlideIndex(nextNum - 1);
-      } else if (toolCall.toolName === 'setCurrentSlide') {
-        // Navigate to the specified slide (0-based index)
-        presentationHelpers.setCurrentSlideIndex(args.slideNumber - 1);
-      }
+    body: () => ({
+      mindcacheData: presentationCache.getAll(),
+    }),
+  }), []);
+
+  const { messages, sendMessage, status } = useChat({
+    transport,
+    onFinish: ({ message }) => {
+      trackEvent('chat_answer', { answer: getMessageText(message).slice(0, 200), path: '/edit' });
     },
   });
+
+  const isLoading = status === 'streaming' || status === 'submitted';
+
+  // Watch messages for tool results and apply them
+  useEffect(() => {
+    for (const msg of messages) {
+      if (msg.role !== 'assistant') continue;
+      for (const part of msg.parts) {
+        if (isToolUIPart(part) && (part as any).state === 'output-available') {
+          const id = (part as any).toolCallId;
+          if (!processedToolCalls.current.has(id)) {
+            processedToolCalls.current.add(id);
+            const name = getToolName(part);
+            console.log('Tool result:', name, (part as any).output);
+            applyToolResult(name, (part as any).output);
+          }
+        }
+      }
+    }
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -66,6 +91,15 @@ export default function Chatbot() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    const message = input.trim();
+    trackEvent('chat_message', { content: message.slice(0, 200), path: '/edit' });
+    sendMessage({ parts: [{ type: 'text', text: message }] });
+    setInput('');
+  };
 
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
@@ -86,7 +120,7 @@ export default function Chatbot() {
         )}
 
         {messages
-          .filter((message) => message.content.trim().length > 0)
+          .filter((message) => getMessageText(message).trim().length > 0)
           .map((message) => (
             <div
               key={message.id}
@@ -101,7 +135,7 @@ export default function Chatbot() {
                     : 'bg-gray-100 text-gray-900'
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap">{getMessageText(message)}</p>
               </div>
             </div>
           ))}
@@ -121,16 +155,12 @@ export default function Chatbot() {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={(e) => {
-          const message = input.slice(0, 200);
-          handleSubmit(e);
-          trackEvent('chat_message', { content: message, path: '/edit' });
-        }} className="p-4 border-t border-gray-200">
+      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
         <div className="flex gap-2">
               <input
                 type="text"
                 value={input}
-                onChange={handleInputChange}
+                onChange={(e) => setInput(e.target.value)}
                 placeholder="What would you like to create?"
                 className="flex-1 p-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 disabled={isLoading}
@@ -147,4 +177,3 @@ export default function Chatbot() {
     </div>
   );
 }
-

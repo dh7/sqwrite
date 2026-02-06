@@ -1,5 +1,5 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { streamText } from 'ai';
+import { streamText, convertToModelMessages } from 'ai';
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
   const result = await streamText({
     model: openrouter('anthropic/claude-sonnet-4'),
-    messages,
+    messages: await convertToModelMessages(messages),
     system: `You are a helpful AI assistant helping an audience member understand a presentation.
 
 ## Current Presentation State (MindCache STM):
@@ -50,6 +50,6 @@ Be concise, clear, and helpful. Focus on helping the audience understand and lea
     // No tools in read-only mode
   });
 
-  return result.toDataStreamResponse();
+  return result.toUIMessageStreamResponse();
 }
 

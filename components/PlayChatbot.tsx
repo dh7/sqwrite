@@ -1,25 +1,38 @@
 "use client";
 
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { Send } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { presentationCache } from '@/lib/mindcache-store';
 import { trackEvent } from '@/lib/sessionTracking';
 
+function getMessageText(message: { parts: Array<{ type: string; text?: string }> }): string {
+  return message.parts
+    .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+    .map((p) => p.text)
+    .join('');
+}
+
 export default function PlayChatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const [input, setInput] = useState('');
+
+  const transport = useMemo(() => new DefaultChatTransport({
     api: '/api/chat-readonly',
-    body: {
-      mindcacheData: typeof window !== 'undefined' 
-        ? presentationCache.getAll()
-        : null,
-    },
-    onFinish: (message) => {
-      trackEvent('chat_answer', { answer: message.content.slice(0, 200), path: '/play' });
+    body: () => ({
+      mindcacheData: presentationCache.getAll(),
+    }),
+  }), []);
+
+  const { messages, sendMessage, status } = useChat({
+    transport,
+    onFinish: ({ message }) => {
+      trackEvent('chat_answer', { answer: getMessageText(message).slice(0, 200), path: '/play' });
     },
   });
+
+  const isLoading = status === 'streaming' || status === 'submitted';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -28,6 +41,15 @@ export default function PlayChatbot() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    const message = input.trim();
+    trackEvent('chat_message', { content: message.slice(0, 200), path: '/play' });
+    sendMessage({ parts: [{ type: 'text', text: message }] });
+    setInput('');
+  };
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -39,7 +61,7 @@ export default function PlayChatbot() {
         )}
 
         {messages
-          .filter((message) => message.content.trim().length > 0)
+          .filter((message) => getMessageText(message).trim().length > 0)
           .map((message) => (
             <div
               key={message.id}
@@ -54,7 +76,7 @@ export default function PlayChatbot() {
                     : 'bg-gray-100 text-gray-900'
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap">{getMessageText(message)}</p>
               </div>
             </div>
           ))}
@@ -74,16 +96,12 @@ export default function PlayChatbot() {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={(e) => {
-          const message = input.slice(0, 200);
-          handleSubmit(e);
-          trackEvent('chat_message', { content: message, path: '/play' });
-        }} className="p-3 border-t border-gray-200">
+      <form onSubmit={handleSubmit} className="p-3 border-t border-gray-200">
         <div className="flex gap-2">
           <input
             type="text"
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question..."
             className="flex-1 px-3 py-2 bg-gray-50 text-gray-900 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             disabled={isLoading}
@@ -100,4 +118,3 @@ export default function PlayChatbot() {
     </div>
   );
 }
-

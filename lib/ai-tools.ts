@@ -7,7 +7,7 @@ export const createMindCacheTools = () => {
   return {
     updatePresentationTitle: tool({
       description: 'Update the presentation title',
-      parameters: z.object({
+      inputSchema: z.object({
         title: z.string().describe('The new presentation title'),
       }),
       execute: async ({ title }) => {
@@ -18,7 +18,7 @@ export const createMindCacheTools = () => {
 
     updateSlideContent: tool({
       description: 'Update the content of a specific slide',
-      parameters: z.object({
+      inputSchema: z.object({
         slideNumber: z.number().describe('The slide number (1-based index)'),
         content: z.object({
           type: z.enum(['title', 'quote', 'bullets', 'image', 'drawing']).describe('Type of slide content'),
@@ -45,7 +45,7 @@ export const createMindCacheTools = () => {
     
     updateSpeakerNotes: tool({
       description: 'Update the speaker notes for a specific slide',
-      parameters: z.object({
+      inputSchema: z.object({
         slideNumber: z.number().describe('The slide number (1-based index)'),
         notes: z.string().describe('The speaker notes in markdown format'),
       }),
@@ -62,7 +62,7 @@ export const createMindCacheTools = () => {
     
     addSlide: tool({
       description: 'Add a new slide to the presentation. IMPORTANT: After adding a slide, you should immediately call setCurrentSlide to navigate to the newly created slide so the user can see it.',
-      parameters: z.object({
+      inputSchema: z.object({
         content: z.object({
           type: z.enum(['title', 'quote', 'bullets', 'image', 'drawing']).describe('Type of slide content'),
           title: z.string().optional().describe('Title for all slide types'),
@@ -89,7 +89,7 @@ export const createMindCacheTools = () => {
 
     setCurrentSlide: tool({
       description: 'Navigate to a specific slide by setting it as the current slide. Use this after creating a new slide to show it to the user, or to navigate to any existing slide.',
-      parameters: z.object({
+      inputSchema: z.object({
         slideNumber: z.number().describe('The slide number to navigate to (1-based index)'),
       }),
       execute: async ({ slideNumber }) => {

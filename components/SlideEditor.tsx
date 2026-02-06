@@ -4,7 +4,7 @@ import { SlideContent, TitleContent, QuoteContent, BulletsContent, ImageContent,
 import { useState, useRef, useEffect } from 'react';
 import { Upload, Pencil, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import '@excalidraw/excalidraw/index.css';
+
 
 const Excalidraw = dynamic(
   async () => (await import('@excalidraw/excalidraw')).Excalidraw,

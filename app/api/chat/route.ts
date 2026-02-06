@@ -1,5 +1,5 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { streamText } from 'ai';
+import { streamText, stepCountIs, convertToModelMessages } from 'ai';
 import { createMindCacheTools } from '@/lib/ai-tools';
 
 const openrouter = createOpenRouter({
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
   const result = await streamText({
     model: openrouter('anthropic/claude-sonnet-4'),
-    messages,
+    messages: await convertToModelMessages(messages),
     system: `You are a creative and action-oriented AI assistant helping users build compelling presentations in Square. You have a STRONG bias for action - always create slides immediately when requested, never ask for permission first.
 
 ## Current Presentation State:
@@ -107,9 +107,9 @@ A great presentation **alternates between slide types** to maintain rhythm and e
 
 Remember: You're a creative partner. Act first, confirm when done, always include speaker notes.`,
     tools,
-    maxToolRoundtrips: 10,
+    stopWhen: stepCountIs(10),
   });
 
-  return result.toDataStreamResponse();
+  return result.toUIMessageStreamResponse();
 }
 
