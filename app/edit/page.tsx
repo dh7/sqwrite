@@ -109,9 +109,8 @@ export default function EditPage() {
   };
 
   const handleDeleteSlide = () => {
-    if (currentSlide && confirm('Are you sure you want to delete this slide?')) {
+    if (currentSlide) {
       presentationHelpers.deleteSlide(currentSlide.id);
-      // No need to manually trigger refresh - MindCache subscription will handle it
     }
   };
 
